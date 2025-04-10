@@ -1,0 +1,8 @@
+
+# This project is compatible with the following versions of dependencies:
+openai  (version: 1.69.0)
+pandas  (version: 2.0.0)
+numpy   (version: 1.24.2)
+
+# There are no known conflicts with other versions, but minor updates may be allowed.
+# Be sure to check for any specific version compatibility in the future if issues arise.

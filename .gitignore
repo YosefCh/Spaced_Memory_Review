@@ -1,0 +1,9 @@
+# Ignore Python bytecode files
+__pycache__/
+*.pyc
+
+# Ignore CSV files (user-submitted data)
+*.csv
+
+# Ignore the personal configuration file
+config.json

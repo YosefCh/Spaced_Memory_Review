@@ -1,0 +1,12 @@
+// This is a template for the configuration file. Copy this file and rename it to config.json.
+{
+    "INSTRUCTIONS": "FOR THE STYLES, SINGLE FILES PATH, REVIEW FILES PATH, AND DATA FILE ENTER THE DIRECTORY WHERE THE PROJECT IS LOCATED BEFORE THE GIVEN PATH.",
+    "Api_key": "",
+    "styles": "./Styles/styles.css",  // relative path to styles
+    "single_files_path": "./Data/Single Day Files/",  // relative path to single day files
+    "review_files_path": "./Review/Data/Review Files/",  // relative path to review files
+    "data_file": "./Data/learned_material.csv",  // relative path to the data file
+    "screenshot_path": "C:/Users/YOUR USER NAME/Pictures/Screenshots/",  // update to user's path
+    "browser_path": "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe %s",  // adjust browser paths as needed
+    "backup_browser_path": "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe %s"
+}
