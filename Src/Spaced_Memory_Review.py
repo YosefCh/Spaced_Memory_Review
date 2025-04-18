@@ -187,7 +187,7 @@ class SpacedMemoryReview:
                 # Insert links if available
                 for link in self.links:
                     f.write(f'<li><a href="{link.strip()}" target="_blank">{link.strip()}</a></li><br>\n')
-                f.write('</ul><br id="end">')
+                f.write('</ul><p id="end"></p>')
                 f.write("</section>\n</body>\n</html>")
 
         
@@ -274,20 +274,25 @@ class SpacedMemoryReview:
             
             for index, i in enumerate(files):
                 if len(str(i)) > 4:
-                    
+                    blank = False
                     with open(i, "r") as single_file:
                         full_content = single_file.read()
                         # Find the content within <section> tags
                         section_start = full_content.find('<div id=date>')
-                        section_end = full_content.find('<br id="end">', section_start)
+                        section_end = full_content.find('<p id="end">', section_start)
 
-                        section_content = full_content[section_start:section_end+len('</ul>')]
+                        section_content = full_content[section_start:section_end+len('<p id="end">')]
                         
                         #rev_file.write(dates[files.index(i)] + "<br><br>\n")
                         rev_file.write(section_content)
-                else:
+                else: 
+                        blank = True
                         rev_file.write(f"<h2>No material to review for {dates[index]}.</h2>")
-                        
+            if blank:
+                print('')
+            else:
+                rev_file.write("</section></body></html>")
+      
         file_path = os.path.abspath(review_file)
         print(f"Opening file in Edge: {file_path}")
        
