@@ -187,7 +187,7 @@ class SpacedMemoryReview:
                 # Insert links if available
                 for link in self.links:
                     f.write(f'<li><a href="{link.strip()}" target="_blank">{link.strip()}</a></li><br>\n')
-                f.write("</ul>\n")
+                f.write('</ul><br id="end">')
                 f.write("</section>\n</body>\n</html>")
 
         
@@ -279,7 +279,7 @@ class SpacedMemoryReview:
                         full_content = single_file.read()
                         # Find the content within <section> tags
                         section_start = full_content.find('<div id=date>')
-                        section_end = full_content.find('</ul>', section_start)
+                        section_end = full_content.find('<br id="end">', section_start)
 
                         section_content = full_content[section_start:section_end+len('</ul>')]
                         
