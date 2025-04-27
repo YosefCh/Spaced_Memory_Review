@@ -269,8 +269,10 @@ class SpacedMemoryReview:
             rev_file.write(f"<!DOCTYPE html>\n")
             with open(self.styles, "r") as style:
                 css = style.read()
-            rev_file.write(f"<html lang='en'><head>\n<title>{file_date_version}_review</title>\n</head>\n<style>{css}</style>\n<body>\n<section>\n")
-            rev_file.write(f"""<header><h1>{file_date_version} Review Material</h1></header><br></br>\n""")
+            rev_file.write(f"""<html lang='en'><head>\n<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">\n
+                               <title>{file_date_version}_review</title>\n
+                               <style>{css}</style></head>\n<body>\n<section>\n""")
+            rev_file.write(f"""<header><h1>{file_date_version} Review Material</h1></header><br>\n""")
             
             for index, i in enumerate(files):
                 if len(str(i)) > 4:
@@ -304,6 +306,9 @@ class SpacedMemoryReview:
             webbrowser.get("C:/Program Files/Google/Chrome/Application/chrome.exe %s").open(f"file://{file_path}")
          
             
-
-
+if __name__ == "__main__":
+    spaced_memory = SpacedMemoryReview()
+    print(spaced_memory.get_review_material())
+    
+    
     

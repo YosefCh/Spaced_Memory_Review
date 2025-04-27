@@ -54,3 +54,15 @@ img {
 .links a:hover {
     text-decoration: underline;
 }
+
+
+/* For screens 600px wide or less (common phone sizes) */
+@media screen and (max-width: 600px) {
+    body {
+      font-size: 19px;
+    }
+    img {
+      width: 100%;
+      height: auto;
+    }
+  }

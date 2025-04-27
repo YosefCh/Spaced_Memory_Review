@@ -8,3 +8,5 @@ __pycache__/
 *.html
 # Ignore the personal configuration file
 config.json
+
+notes.ipynb
