@@ -241,14 +241,19 @@ class SpacedMemoryReview:
 
         self.review_files = [self.df['FilePath'].iloc[diff]]
         self.dates = [self.df['Date'].iloc[diff]]
+        self.review_subjects = [self.df['Subject'].iloc[diff]]
+        self.review_topics = [self.df['Topic'].iloc[diff]]
 
         for days in INTERVALS:
             index = diff - days
             if index >= 0:
                 self.review_files.append(self.df['FilePath'].iloc[index])
                 self.dates.append(self.df['Date'].iloc[index])
+                self.review_subjects.append(self.df['Subject'].iloc[index])
+                self.review_topics.append(self.df['Topic'].iloc[index])
+                
         
-        return self.review_files, self.dates
+        return self.review_files, self.dates, self.review_subjects, self.review_topics
 
     
     def display_review_material(self):
@@ -256,6 +261,9 @@ class SpacedMemoryReview:
         # otherwise iterate do a for loop with lenght of the files list and check for nan and if not add the 
         files = self.get_review_material()[0]
         dates = self.get_review_material()[1]
+        subjects = self.get_review_material()[2]
+        topics = self.get_review_material()[3]
+        
         
         # get the len of all the files and check for "nan" by getting the len of the string and testing if it is less than 4
         lens = sum([len(str(file)) for file in files])
@@ -272,15 +280,25 @@ class SpacedMemoryReview:
             rev_file.write(f"""<html lang='en'><head>\n<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">\n
                                <title>{file_date_version}_review</title>\n
                                <style>{css}</style></head>\n<body>\n<section>\n""")
-            rev_file.write(f"""<header><h1>{file_date_version} Review Material</h1></header><br>\n""")
+            rev_file.write(f"""<header><h1>{file_date_version} Review Material</h1></header><br>""")
             
             for index, i in enumerate(files):
                 if len(str(i)) > 4:
                     blank = False
                     with open(i, "r") as single_file:
                         full_content = single_file.read()
+                        
+                        header = f"""
+                           <ul style="padding-inline-start: 0px;">
+                                <li style="background-color: #a9b2a9; width: 100%"><strong>&nbsp;Date:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em style="color: white">&nbsp;{dates[index]}&nbsp;</em></strong></li>
+                                <li style="background-color: #a9b2a9; width: 100%"><strong>&nbsp;Subject:<em style="color: white">&nbsp;{subjects[index]}&nbsp;</em></strong></li>
+                                <li style="background-color: #a9b2a9; width: 100%"><strong>&nbsp;Topic:&nbsp;&nbsp;&nbsp;&nbsp;<em style="color: white">&nbsp;{topics[index]}&nbsp;</em></strong></li>
+                            </ul>
+                           """
+                           
+                        rev_file.write(header)
                         # Find the content within <section> tags
-                        section_start = full_content.find('<div id=date>')
+                        section_start = full_content.find('<div id="text">')
                         section_end = full_content.find('<p id="end">', section_start)
 
                         section_content = full_content[section_start:section_end+len('<p id="end">')]
