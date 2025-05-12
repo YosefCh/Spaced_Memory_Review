@@ -17,11 +17,14 @@ if is_testing:
     data_file = paths['TTdata_file']
     folders = [paths['TTsingle_files_path'], paths['TTreview_files_path']]
 
-def create_data_file():
+def create_data_file(reset=False):
+    # reset: bool = False
+    # this is needed to be able to have the function called in the reset_data_file function where we will set reset=True
+    # and overide checking if the data file exists since we want to create a new one despite it already existing.
     """Create a new data file."""
     # we must check if the file exists as the initiate_program funcion will call this function as
     # long as either the data file or the folders do not exist. If we do not check for the file, it will be OVERWRITTEN LOSING ALL THE DATA
-    if not os.path.exists(data_file):
+    if reset or not os.path.exists(data_file):
         with open(data_file, 'w') as Csv_file:
             # Write the header
             Csv_file.write('Index,Date,FilePath,Subject,Topic\n')
@@ -44,15 +47,15 @@ def reset_data_file():
         if files > 0:
             warning = input(f'Warning: The file contains {files} records of learned material. Do you want to overwrite it? (y for yes, anything else for no): ')
             if warning.lower() != 'y':
-                print('The file has not been overwritten.')
+                display(Markdown('The __reveiw schedule__ has not been reset.'))
                 return
             danger = input("Are you sure you want to delete all records? Enter 'yes' to proceed: ")
             if danger.lower() != 'yes':
-                print('The file has not been reset.')
+                display(Markdown('The __reveiw schedule__ has not been reset.'))
                 return
     
-    create_data_file()
-    print('The data file has been reset successfully.')
+    create_data_file(reset=True)
+    display(Markdown('The __reveiw schedule__ has been reset successfully.'))
     
 
 def create_folders():
@@ -78,8 +81,8 @@ def initiate_program():
         time.sleep(3)
         display(Markdown("#### You're all set. Start learning and Retaining!!!"))
     else:
-        print("""The program is already set up.\nThere is no need to run this cell each time.\nIf you want to reset the data file, please run the reset_data_file cell at the bottom of this page.
-            """)
+        display(HTML("""<h3><strong>The program is already set up.</strong></h3><p>There is no need to run this cell each time.</p>If you want to reset the data file, please run the cell in the <strong>Reset Program</strong> section (at the bottom of this page).
+            """))
  
  
         

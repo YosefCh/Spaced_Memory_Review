@@ -195,10 +195,7 @@ class SpacedMemoryReview:
         
     def learned_material_to_csv(self):
         """Run the spaced memory review."""
-        print("Welcome to the Spaced Memory Review! \n")
-        print("The following must be submitted:\nSubject and topic.\nText OR an Image\nLinks are optional\n")
-        print("Press 'Enter' to submit or to skip a field.\n")
-        print("To quit the program type exit at any time. No material will be submitted if exit is entered.\n")
+        
         a = self.get_todays_material()
         if a == "exitted":
             return 
