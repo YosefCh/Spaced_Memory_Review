@@ -25,14 +25,56 @@ def create_data_file(reset=False):
     # we must check if the file exists as the initiate_program funcion will call this function as
     # long as either the data file or the folders do not exist. If we do not check for the file, it will be OVERWRITTEN LOSING ALL THE DATA
     if reset or not os.path.exists(data_file):
+        # prompt user for the duration of the review schedule
+        display(Markdown("### Select the duration of the review schedule:"))
+        display(HTML("Enter <strong>1</strong> for choosing the duration in <strong>years</strong>, or <strong>2</strong> for choosing the duration in <strong>months</strong>."))
+        
+        max_attempts = 5
+        attempts = 0
+        
+        while True:
+            attempts += 1 
+            if attempts > max_attempts:
+                  print("Maximum attempts reached. Exiting the program.")
+                  return 'Timed out'
+            duration = input("Enter your choice (1 or 2): ")
+            print('You entered:', duration)
+                
+            if duration.isdigit() and int(duration) in [1, 2]:
+                duration = int(duration)  
+                break
+            # ensure that response appears before the next prompt by using flush=True which forces the output to be written immediately
+            else:
+                print("Invalid input. Please enter 1 or 2.", flush=True)
+            
+               
+                
+        for i in range(max_attempts): 
+            if duration == 1:
+                years = input("Enter the number of years (whole number between 1 - 15): ")
+                if years.isdigit() and 1 <= int(years) <= 15:
+                    years = int(years)
+                    # Approximate the number of days in a year as 365
+                    duration = years * 365
+                    break
+                else:
+                    print("Invalid input. Please enter a whole positive number between 1 - 15.", flush=True)
+            elif duration == 2:
+                months = input("Enter the number of months (whole number between 1 - 36): ")
+                if months.isdigit() and 1 <= int(months) <= 36:
+                    months = int(months)
+                    # Approximate the number of days in a month as 30
+                    duration = months * 30
+                    break
+                else:
+                    print("Invalid input. Please enter a whole positive number between 1 - 36.", flush=True)
         with open(data_file, 'w') as Csv_file:
             # Write the header
             Csv_file.write('Index,Date,FilePath,Subject,Topic\n')
 
             # Generate 10 years' worth of dates from today
             start_date = datetime.now()
-            years = 10
-            for i in range(years * 365):  # Approximate for 10 years
+            for i in range(duration):  # Approximate for 10 years
                 short_date = (start_date + timedelta(days=i)).strftime("%#m/%#d/%Y") 
                 Csv_file.write(f"{i+1},{short_date},,,\n")  # Empty placeholders for FilePath, Subject, and Topic
 
@@ -87,5 +129,4 @@ def initiate_program():
  
         
 if __name__ == '__main__':
-    initiate_program()
-    #reset_data_file()
+  reset_data_file()
