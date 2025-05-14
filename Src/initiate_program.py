@@ -30,12 +30,11 @@ def create_data_file(reset=False):
         display(HTML("Enter <strong>1</strong> for choosing the duration in <strong>years</strong>, or <strong>2</strong> for choosing the duration in <strong>months</strong>."))
         
         max_attempts = 5
-        attempts = 0
+        unit_attempts = 0
         
         while True:
-            attempts += 1 
-            if attempts > max_attempts:
-                  print("Maximum attempts reached. Exiting the program.")
+            unit_attempts += 1 
+            if unit_attempts > max_attempts:
                   return 'Timed out'
             duration = input("Enter your choice (1 or 2): ")
             print('You entered:', duration)
@@ -48,8 +47,11 @@ def create_data_file(reset=False):
                 print("Invalid input. Please enter 1 or 2.", flush=True)
             
                
-                
-        for i in range(max_attempts): 
+        num_yr_mnth_attempts = 0       
+        while True:
+            num_yr_mnth_attempts += 1 
+            if num_yr_mnth_attempts > max_attempts:
+                return 'Timed out'
             if duration == 1:
                 years = input("Enter the number of years (whole number between 1 - 15): ")
                 if years.isdigit() and 1 <= int(years) <= 15:
@@ -77,6 +79,7 @@ def create_data_file(reset=False):
             for i in range(duration):  # Approximate for 10 years
                 short_date = (start_date + timedelta(days=i)).strftime("%#m/%#d/%Y") 
                 Csv_file.write(f"{i+1},{short_date},,,\n")  # Empty placeholders for FilePath, Subject, and Topic
+            return 'Created new data file'
 
     
 
@@ -96,8 +99,11 @@ def reset_data_file():
                 display(Markdown('The __reveiw schedule__ has not been reset.'))
                 return
     
-    create_data_file(reset=True)
-    display(Markdown('The __reveiw schedule__ has been reset successfully.'))
+    call_create_func = create_data_file(reset=True)
+    if call_create_func == 'Timed out':
+        display(HTML('<em><strong style="color: red">Repeated Invalid Input.&nbsp;</strong></em>Exiting the program.'))   
+    else:
+        print('The __reveiw schedule__has been reset successfully.')
     
 
 def create_folders():
@@ -116,7 +122,13 @@ def initiate_program():
     if not os.path.exists(data_file) or not os.path.exists(folders[0]) or not os.path.exists(folders[1]):
         display(HTML("<h1 style='color:blue;'>Welcome to the <strong>Spaced Memory Review</strong> Program!</h1>"))
         display(Markdown("### This program will allow you to retain __*all*__ of your learning!!."))
-        create_data_file()
+        
+        a = create_data_file()
+        if a == 'Timed out':
+            display(HTML('<em><strong style="color: red">Repeated Invalid Input.&nbsp;</strong></em>Exiting the program.'))
+            
+            return
+        # create_data_file()
         create_folders()
         time.sleep(1.6)
         display(Markdown("#### Setting up the program...\n"))
