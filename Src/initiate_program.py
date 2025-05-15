@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 from IPython.display import Markdown, display, HTML
 import json
 import os
@@ -56,8 +57,9 @@ def create_data_file(reset=False):
                 years = input("Enter the number of years (whole number between 1 - 15): ")
                 if years.isdigit() and 1 <= int(years) <= 15:
                     years = int(years)
-                    # Approximate the number of days in a year as 365
-                    duration = years * 365
+                    end_date = datetime.now() + relativedelta(years=years)
+                    duration = (end_date - datetime.now()).days + 1
+                    # +1 to include the current day in the schedule
                     break
                 else:
                     print("Invalid input. Please enter a whole positive number between 1 - 15.", flush=True)
@@ -65,8 +67,9 @@ def create_data_file(reset=False):
                 months = input("Enter the number of months (whole number between 1 - 36): ")
                 if months.isdigit() and 1 <= int(months) <= 36:
                     months = int(months)
-                    # Approximate the number of days in a month as 30
-                    duration = months * 30
+                    end_date = datetime.now() + relativedelta(months=months)
+                    duration = (end_date - datetime.now()).days + 1
+        
                     break
                 else:
                     print("Invalid input. Please enter a whole positive number between 1 - 36.", flush=True)
