@@ -5,12 +5,16 @@ import json
 import os
 import time
 
-# Load configuration
+# Load configuration that stores necessary paths, API keys, and other settings
 with open('config.json', "r") as f:
     paths = json.load(f)
 
+# load the paths to where we will store the data file and the folders
 data_file = paths['data_file']
 folders = [paths['single_files_path'], paths['review_files_path']]
+
+# Set a flag for testing mode
+# This flag can be used to switch between testing and production modes
 is_testing = True  # Set to True for testing mode
 
 # Use separate paths for testing mode
@@ -19,47 +23,80 @@ if is_testing:
     folders = [paths['TTsingle_files_path'], paths['TTreview_files_path']]
 
 def create_data_file(reset=False):
-    # reset: bool = False
-    # this is needed to be able to have the function called in the reset_data_file function where we will set reset=True
-    # and overide checking if the data file exists since we want to create a new one despite it already existing.
-    """Create a new data file."""
-    # we must check if the file exists as the initiate_program funcion will call this function as
-    # long as either the data file or the folders do not exist. If we do not check for the file, it will be OVERWRITTEN LOSING ALL THE DATA
-    if reset or not os.path.exists(data_file):
+    """
+    Create the data file for the spaced memory review program.
+
+    Parameters:
+    - reset (bool): If True, creates a new data file even if one already exists (used for the reset functionality). Default is False, in case
+      user accidentally runs the initiate_program function which calls this one.
+      
+    Returns:
+    - str: A message indicating the result of the function. 
+           It returns "Timed out" if the user fails to provide valid input within the allowed attempts, or "Success" if the data file is 
+           created successfully. This return value is used by the reset function to determine whether to display a reset message or not.
+           
+    This function prompts the user to select a review schedule duration 
+    (in years or months) and calculates the total number of days for the program. 
+    It writes the initial setup to the data file.
+    """
+    
+    # creation of file is only done if the file does not yet exist (program has not been set up yet) or if the user has requested a reset
+    if not os.path.exists(data_file) or reset:
         # prompt user for the duration of the review schedule
         display(Markdown("### Select the duration of the review schedule:"))
         display(HTML("Enter <strong>1</strong> for choosing the duration in <strong>years</strong>, or <strong>2</strong> for choosing the duration in <strong>months</strong>."))
         
+        # set max attempts for user input to avoid infinite loops
         max_attempts = 5
+        # Initialize attempt counters to count the number of attempts made by the user
         unit_attempts = 0
         
+        # Loop until a valid input is received or the maximum attempts are reached
         while True:
+            # increment the attempt counter for each loop iteration
             unit_attempts += 1 
             if unit_attempts > max_attempts:
+                  # if the user has exceeded the maximum attempts, return 'Timed out' (to be used by the reset function to know not to display a
+                  # successful reset message)
                   return 'Timed out'
+              
+            # assign variable duration to the user metric choice
             duration = input("Enter your choice (1 or 2): ")
             print('You entered:', duration)
-                
+            
+            # ensure that the input is a digit and the integer value is either 1 or 2 
             if duration.isdigit() and int(duration) in [1, 2]:
-                duration = int(duration)  
+                # convert the input to an integer
+                duration = int(duration) 
+                # if the input is valid, break out of the loop 
                 break
             # ensure that response appears before the next prompt by using flush=True which forces the output to be written immediately
             else:
+                # if the input is invalid, prompt the user to enter a valid input
+                # this will be repeated until a valid input is received or the maximum attempts are reached
                 print("Invalid input. Please enter 1 or 2.", flush=True)
             
-               
-        num_yr_mnth_attempts = 0       
+        
+        # After a valid input is received, set the duration to the number of days based on the user's choice       
+        num_yr_mnth_attempts = 0 
+        # same logic as before, but now we are counting the number of attempts to get a valid input for the duration in years or months      
         while True:
             num_yr_mnth_attempts += 1 
             if num_yr_mnth_attempts > max_attempts:
                 return 'Timed out'
+            
+            # for the year choice
             if duration == 1:
                 years = input("Enter the number of years (whole number between 1 - 15): ")
                 if years.isdigit() and 1 <= int(years) <= 15:
                     years = int(years)
+                    
+                    # Calculate the end date based on the number of years
                     end_date = datetime.now() + relativedelta(years=years)
+                    # Calculate the exact number of days needed as lines in the csv data file
+                    # The +1 is to include the current day in the schedule
                     duration = (end_date - datetime.now()).days + 1
-                    # +1 to include the current day in the schedule
+                    # break out of the loop if the input is valid
                     break
                 else:
                     print("Invalid input. Please enter a whole positive number between 1 - 15.", flush=True)
@@ -69,19 +106,23 @@ def create_data_file(reset=False):
                     months = int(months)
                     end_date = datetime.now() + relativedelta(months=months)
                     duration = (end_date - datetime.now()).days + 1
-        
                     break
                 else:
                     print("Invalid input. Please enter a whole positive number between 1 - 36.", flush=True)
+        
+        # After a valid input is received, create the data file            
         with open(data_file, 'w') as Csv_file:
-            # Write the header
+            # Write the header columns to the CSV file
             Csv_file.write('Index,Date,FilePath,Subject,Topic\n')
 
-            # Generate 10 years' worth of dates from today
+            # get the current date as the first value
             start_date = datetime.now()
-            for i in range(duration):  # Approximate for 10 years
-                short_date = (start_date + timedelta(days=i)).strftime("%#m/%#d/%Y") 
-                Csv_file.write(f"{i+1},{short_date},,,\n")  # Empty placeholders for FilePath, Subject, and Topic
+            for i in range(duration): 
+                # format the date as MM/DD/YYYY and write it to the CSV file 
+                short_date = (start_date + timedelta(days=i)).strftime("%#m/%#d/%Y")
+                # Empty placeholders for FilePath, Subject, and Topic 
+                Csv_file.write(f"{i+1},{short_date},,,\n") 
+            # If the file is created successfully, return a success message (used by the reset function to display a successful reset message)
             return 'Created new data file'
 
     
