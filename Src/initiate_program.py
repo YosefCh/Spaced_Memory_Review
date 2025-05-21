@@ -128,22 +128,37 @@ def create_data_file(reset=False):
     
 
 def reset_data_file():
-    """Reset the existing data file."""
+    """
+    Reset the existing data file for the spaced memory review program.
+
+    This function checks if a data file exists and, if so, prompts the user to confirm
+    before overwriting it. It warns the user if existing records will be lost and 
+    ensures multiple confirmations before deleting data. If confirmed, it calls 
+    create_data_file(reset=True) to recreate the file.
+    
+    """
+    # checks if the data file exists (if not, there is no need to reset it)
     if os.path.exists(data_file):
         with open(data_file, 'r') as Csv_file:
+            # check if the file contains any records of learned material which is done by looking for a C: (file path)
+            # use a generator expression to count the number of lines that contain 'C:'
             files = sum(1 for line in Csv_file if 'C:' in line)
         
+        # if the file contains records, prompt the user to confirm before overwriting it
         if files > 0:
             warning = input(f'Warning: The file contains {files} records of learned material. Do you want to overwrite it? (y for yes, anything else for no): ')
             if warning.lower() != 'y':
                 display(Markdown('The __reveiw schedule__ has not been reset.'))
+                # if the user does not want to overwrite the file, exit the function
                 return
             danger = input("Are you sure you want to delete all records? Enter 'yes' to proceed: ")
             if danger.lower() != 'yes':
                 display(Markdown('The __reveiw schedule__ has not been reset.'))
                 return
-    
+    # if the user confirms, proceed to reset the data file by using the rest=True argument to oveiride the check in that function for the exitsing file
     call_create_func = create_data_file(reset=True)
+    
+    # check if user entry has timed out as a result of too many invalid inputs
     if call_create_func == 'Timed out':
         display(HTML('<em><strong style="color: red">Repeated Invalid Input.&nbsp;</strong></em>Exiting the program.'))   
     else:
@@ -153,6 +168,7 @@ def reset_data_file():
 def create_folders():
     """Create the folders to house the single day and review files."""
     
+    # check if the folders exist, and if not, create them
     for folder in folders:
         if not os.path.exists(folder):
             os.makedirs(folder)
@@ -160,20 +176,35 @@ def create_folders():
         
 
 def initiate_program():
-    """Main function to initiate the program."""
+    """
+    Main function to initiate the program.
+    
+    This function sets up the program environment, including data files and folders, 
+    and presents an introductory message to the user. If a setup already exists, it 
+    notifies the user and does not repeat initialization.
+    """
+    
+    # just for testing purposes will be removed later
     if is_testing:
         print("\nRunning in TESTING MODE. Changes will not affect real data.\n")
+        
+    # if either the data file or the folders do not exist, prompt the user to set up the program
+    # this is only necessary if some of the files or folders were tampered with as when running for the first time
+    # there is no need to check, as they certainly do not exist
     if not os.path.exists(data_file) or not os.path.exists(folders[0]) or not os.path.exists(folders[1]):
         display(HTML("<h1 style='color:blue;'>Welcome to the <strong>Spaced Memory Review</strong> Program!</h1>"))
         display(Markdown("### This program will allow you to retain __*all*__ of your learning!!."))
         
+        # call the create_data_file function to create the data file
         a = create_data_file()
+        # check if the user entry has timed out as a result of invalid inputs
         if a == 'Timed out':
             display(HTML('<em><strong style="color: red">Repeated Invalid Input.&nbsp;</strong></em>Exiting the program.'))
-            
             return
-        # create_data_file()
+        
+        # call the create_folders function to create the folders
         create_folders()
+        # use sleep to allow the user to read the message as opposed to having all the information appear at once
         time.sleep(1.6)
         display(Markdown("#### Setting up the program...\n"))
         time.sleep(3)
@@ -184,5 +215,5 @@ def initiate_program():
  
  
         
-if __name__ == '__main__':
-  reset_data_file()
+#if __name__ == '__main__':
+  #reset_data_file()
