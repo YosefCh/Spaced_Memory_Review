@@ -11,7 +11,26 @@ class SpacedMemoryReview:
     
 
     def __init__(self):
-        """Initialize  storage paths."""
+        """
+        A spaced repetition learning and review system for managing and recalling learned material.
+
+        This class facilitates a structured approach to learning and reviewing content using the
+        spaced repetition technique. It allows users to input new material, save it with associated
+        text, screenshots and links, convert content to HTML, and schedule it for future reviews.
+        
+        Attributes:
+        -------------------
+        
+        - self....%path%: 
+            Paths for storing single files, review files, data file, screenshots, styles, and browser paths.
+        - self.df:
+            DataFrame containing the learned material and their respective dates.
+        - self.screenshot_function_called:
+            Boolean flag to check if the screenshot function has been called.
+        
+        """
+        
+        # Initialize  storage paths.
         with open("config.json", "r") as f:
             paths = json.load(f)
             self.single_files_path = paths["single_files_path"]
@@ -28,10 +47,11 @@ class SpacedMemoryReview:
         
         
     def get_prepare_screenshot(self):
-        
+        """
+        """
         self.screenshot_function_called = True
         # path where all screenshots are automatically saved even withoug manually saving them
-        self.screenshot_path = "C:/Users/Rebecca/Pictures/Screenshots/"
+        # self.screenshot_path = "C:/Users/Rebecca/Pictures/Screenshots/"
         # list of files in the directory. (no need to filter for folders as there are only files)
         files = [f for f in os.listdir(self.screenshot_path)]
         # sort the files in order of last modified for easy access to the most recently added file
@@ -282,7 +302,7 @@ class SpacedMemoryReview:
             for index, i in enumerate(files):
                 if len(str(i)) > 4:
                     blank = False
-                    with open(i, "r") as single_file:
+                    with open(i, "r", encoding="utf-8") as single_file:
                         full_content = single_file.read()
                         
                         header = f"""
