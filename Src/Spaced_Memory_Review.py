@@ -8,26 +8,66 @@ from AI_class import OpenAIClient
 import time
 
 class SpacedMemoryReview:
+    """
+    A spaced repetition learning and review system for managing and recalling learned material.
+
+    This class implements a comprehensive spaced repetition system that helps users learn and review
+    content effectively over time. It manages the creation, storage, and scheduled review of learning
+    materials including text, screenshots, and web links.
+
+    Attributes:
+        single_files_path (str): Path to store individual learning material files
+        review_files_path (str): Path to store compiled review files
+        data_file (str): Path to the CSV file storing learning material metadata
+        screenshot_path (str): Path where screenshots are saved
+        styles (str): Path to CSS file for styling HTML output
+        browser_path (str): Primary browser path for opening review files
+        backup_browser_path (str): Secondary browser path if primary fails
+        df (pd.DataFrame): DataFrame containing learning material records
+        screenshot_function_called (bool): Flag indicating if screenshot function was used
+        ai (OpenAIClient): Instance of OpenAI client for AI-assisted operations
+
+    The system follows these key principles:
+    1. Material is stored with metadata including subject, topic, and date
+    2. Reviews are scheduled at increasing intervals (1, 7, 30, 90 days, etc.)
+    3. Content is presented in HTML format with consistent styling
+    4. Multiple types of content (text, images, links) are supported
+    
+    Methods
+    -------
+    get_prepare_screenshot()
+        Processes the most recent screenshot for inclusion in learning material.
+    
+    get_todays_material()
+        Collects new learning material which includes text(plain text/Markdown, Image, links) through user input.
+    
+    create_file_name()
+        Generates a descriptive filename for the learning material using OpenAi Api.
+    
+    text_to_html()
+        Converts input text/markdown to HTML format.
+    
+    text_image_links_to_html()
+        Creates an HTML file containing all learning material elements.
+    
+    learned_material_to_csv()
+        Saves new learning material to the tracking system.
+    
+    get_review_material()
+        Retrieves materials due for review based on spaced intervals.
+    
+    display_review_material()
+        Creates and displays a consolidated review file.
+    
+    """
     
 
     def __init__(self):
         """
-        A spaced repetition learning and review system for managing and recalling learned material.
+        Initialize the SpacedMemoryReview system with configuration and required paths.
 
-        This class facilitates a structured approach to learning and reviewing content using the
-        spaced repetition technique. It allows users to input new material, save it with associated
-        text, screenshots and links, convert content to HTML, and schedule it for future reviews.
-        
-        Attributes:
-        -------------------
-        
-        - self....%path%: 
-            Paths for storing single files, review files, data file, screenshots, styles, and browser paths.
-        - self.df:
-            DataFrame containing the learned material and their respective dates.
-        - self.screenshot_function_called:
-            Boolean flag to check if the screenshot function has been called.
-        
+        Loads configuration from config.json file and sets up all necessary paths and attributes.
+        Initializes the DataFrame from the data file and creates an AI client instance.
         """
         
         # Initialize  storage paths.
@@ -48,6 +88,14 @@ class SpacedMemoryReview:
         
     def get_prepare_screenshot(self):
         """
+        Prepare and encode the most recent screenshot for HTML embedding.
+
+        Monitors the screenshot directory for the most recently added image file,
+        converts it to base64 format for HTML embedding, ensuring portability of
+        the review files across devices.
+
+        Returns:
+            str: Base64 encoded string of the screenshot image
         """
         self.screenshot_function_called = True
         # path where all screenshots are automatically saved even withoug manually saving them
@@ -67,6 +115,19 @@ class SpacedMemoryReview:
     
         
     def get_todays_material(self):
+        """
+        Collect today's learning material through user input.
+
+        Prompts the user for subject, topic, optional screenshot, learned text (with Markdown support),
+        and related links. Validates inputs to ensure at least text or image is provided.
+
+        Returns:
+            str: "exitted" if user chooses to exit, None otherwise
+            
+        Note:
+            The method will continuously prompt for input until valid data is provided
+            or user explicitly exits by typing 'exit' at any prompt.
+        """
         while True:
             self.subject = input("Enter subject: ")
             if self.subject.lower() == "exit":  # Check if "exit" is typed for subject
@@ -138,6 +199,14 @@ class SpacedMemoryReview:
         
         
     def create_file_name(self):
+        """
+        Generate a unique and descriptive file name for the learning material.
+
+        Uses OpenAI to create a meaningful file name based on the subject, topic,
+        and content. Ensures uniqueness by appending the current date if necessary.
+
+        The file name is stored in self.new_file_name for later use.
+        """
         current_file_names = os.listdir(self.single_files_path)
         today = datetime.now().strftime("%Y-%m-%d")
     
@@ -159,7 +228,15 @@ class SpacedMemoryReview:
         
         
     def text_to_html(self):
-        """Convert input text or markdown text to HTML."""
+        """
+        Convert input text or markdown to properly formatted HTML.
+
+        Uses OpenAI to convert the learned text (which may contain Markdown)
+        into valid HTML format for display in the review file.
+
+        Returns:
+            str: HTML formatted version of the input text, or None if no text was provided
+        """
         
         if self.learned_text == '':
             # if no text is provided, return. No text to convert.
@@ -177,45 +254,66 @@ class SpacedMemoryReview:
                 
             
     def text_image_links_to_html(self):
-            """Enter all the user information to an HTML file."""
-            # Convert the text to HTML  
-            with open(self.single_files_path + "/" + self.new_file_name, "w", encoding="utf-8") as f:
-                f.write(f"<!DOCTYPE html>\n")
-                
-                with open(self.styles, "r") as style:
-                    css = style.read()
-                
-                f.write(f"""<html>
-        <head>
-            <meta charset="UTF-8">
-            <title>{self.subject} - {self.topic}</title>
-            <style>{css}</style>
-        </head>
-        <body>
-            <section>
-                <header>
-                    <h1>{self.subject}: {self.topic}</h1>
-                </header>
-                <div id=date>{datetime.now().strftime("%m/%d/%Y")}</div>
-                <div id="text">{self.text_to_html()}</div><br>
-        """)
+        """
+        Create a complete HTML file combining text, images, and links.
 
-                # Insert images if available
-                if self.screenshot_function_called:
-                    f.write(f'<img src="data:image/png;base64,{self.image}" alt="Screenshot related to {self.topic}" width="300"><br>\n')
-                f.write('<br>\n<ul id="text">\n')
-                # Insert links if available
-                for link in self.links:
-                    f.write(f'<li><a href="{link.strip()}" target="_blank">{link.strip()}</a></li><br>\n')
-                f.write('</ul><p id="end"></p>')
-                f.write("</section>\n</body>\n</html>")
+        Generates a styled HTML document that includes:
+        - Subject and topic as header
+        - Current date
+        - Converted text content (if any)
+        - Embedded screenshot (if any)
+        - List of related links (if any)
+
+        The file is saved in the single_files_path directory with the generated filename.
+        """
+        # Convert the text to HTML  
+        with open(self.single_files_path + "/" + self.new_file_name, "w", encoding="utf-8") as f:
+            f.write(f"<!DOCTYPE html>\n")
+            
+            with open(self.styles, "r") as style:
+                css = style.read()
+            
+            f.write(f"""<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>{self.subject} - {self.topic}</title>
+        <style>{css}</style>
+    </head>
+    <body>
+        <section>
+            <header>
+                <h1>{self.subject}: {self.topic}</h1>
+            </header>
+            <div id=date>{datetime.now().strftime("%m/%d/%Y")}</div>
+            <div id="text">{self.text_to_html()}</div><br>
+    """)
+
+            # Insert images if available
+            if self.screenshot_function_called:
+                f.write(f'<img src="data:image/png;base64,{self.image}" alt="Screenshot related to {self.topic}" width="300"><br>\n')
+            f.write('<br>\n<ul id="text">\n')
+            # Insert links if available
+            for link in self.links:
+                f.write(f'<li><a href="{link.strip()}" target="_blank">{link.strip()}</a></li><br>\n')
+            f.write('</ul><p id="end"></p>')
+            f.write("</section>\n</body>\n</html>")
 
         
                                       
         
     def learned_material_to_csv(self):
-        """Run the spaced memory review."""
-        
+        """
+        Process and save new learning material to the tracking CSV file.
+
+        Workflow:
+        1. Collect material through get_todays_material()
+        2. Generate appropriate file name
+        3. Create HTML file with content
+        4. Update CSV tracking file with new entry
+
+        Note:
+            If new material is added on the same day, it will overwrite the previous material.
+        """
         a = self.get_todays_material()
         if a == "exitted":
             return 
@@ -244,6 +342,22 @@ class SpacedMemoryReview:
     
 
     def get_review_material(self):
+        """
+        Retrieve material due for review based on spaced repetition intervals.
+
+        Implements a spaced repetition schedule with the following intervals (in days):
+        1, 7, 30, 90, 365, 730, 1095, 1460, 1825, 2190, 2555, 2920, 3285
+
+        Returns:
+            tuple: Contains four lists:
+                - review_files: Paths to files due for review
+                - dates: Original learning dates
+                - review_subjects: Subjects of review materials
+                - review_topics: Topics of review materials
+
+        Note:
+            Returns message if program completion detected (no more data to review).
+        """
         # List of time intervals in days
         INTERVALS = [1, 7, 30, 90, 365, 730, 1095, 1460, 1825, 2190, 2555, 2920, 3285]
         
@@ -274,7 +388,21 @@ class SpacedMemoryReview:
 
     
     def display_review_material(self):
-        
+        """
+        Create and display a consolidated HTML file of all materials due for review.
+
+        Compiles all due review materials into a single HTML file with:
+        - Current date as title
+        - Each review item showing original date, subject, and topic
+        - Full content including text, images, and links
+        - Consistent styling applied
+
+        The compiled review file is automatically opened in the configured web browser
+        (Edge by default, with Chrome as backup).
+
+        Note:
+            Creates a new review file named with current date (YYYY-MM-DD-review.html).
+        """
         # otherwise iterate do a for loop with lenght of the files list and check for nan and if not add the 
         files = self.get_review_material()[0]
         dates = self.get_review_material()[1]
@@ -286,7 +414,7 @@ class SpacedMemoryReview:
         lens = sum([len(str(file)) for file in files])
         if lens < (len(files)* 3) +1:
             return "No material to review."
-        file_date_version = str(self.today.strftime('%Y-%m-%d')).replace(":","-")
+        file_date_version = str(self.today.strftime('%Y-%m-%d')) .replace(":","-")
         
         review_file = self.review_files_path + "/" + file_date_version+"-review" + ".html"
         
