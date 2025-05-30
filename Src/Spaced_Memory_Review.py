@@ -461,7 +461,8 @@ class SpacedMemoryReview:
             
             # Process each file that needs to be reviewed
             for index, i in enumerate(files):
-                if len(str(i)) > 4:  # Check if file path is valid
+                if len(str(i)) > 4: 
+                    # Check if material was submitted by getting len > 3 to know that it is not NAN 
                     blank = False
                     with open(i, "r", encoding="utf-8") as single_file:
                         full_content = single_file.read()
@@ -481,9 +482,11 @@ class SpacedMemoryReview:
                         section_end = full_content.find('<p id="end">', section_start)
                         section_content = full_content[section_start:section_end+len('<p id="end">')]
                         rev_file.write(section_content)
+                # If no material today (len is < 3 which = NAN)
                 else: 
                         blank = True
                         rev_file.write(f"<h2>No material to review for {dates[index]}.</h2>")
+            # FOR SOME REASON WE NEEDED TO OUTPUT SOMETHING, DON'T REMEMBER WHY
             if blank:
                 print('')
             else:
