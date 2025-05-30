@@ -4,19 +4,19 @@
 This project is an intelligent spaced repetition learning system that helps you effectively review and retain information. It implements scientifically-proven memory retention techniques by scheduling reviews at optimal intervals.
 
 ## ✨ Features
-- 📝 Easy submission of learning materials (text and images)
+- 📝 Easy submission of learning materials (text and screenshots)
 - 🎯 Smart scheduling of review intervals
 - 🌐 Browser-based review interface
 - 📊 Organized by subjects and topics
-- 🖼️ Support for screenshots and images
+- 📸 Support for system screenshots
 - 🔗 Optional link attachments
 
 ## 🛠️ Setup Instructions
 
 ### Prerequisites
-- Python 3.11 or higher
+- Python 3.x
 - Jupyter Notebook environment
-- Screenshots folder access
+- System screenshot capability
 
 ### Installation Steps
 1. Clone this repository
