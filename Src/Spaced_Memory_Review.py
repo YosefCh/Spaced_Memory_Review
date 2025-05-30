@@ -70,19 +70,28 @@ class SpacedMemoryReview:
         Initializes the DataFrame from the data file and creates an AI client instance.
         """
         
-        # Initialize  storage paths.
+        # Load paths from config.json file for file storage and system configuration
         with open("config.json", "r") as f:
             paths = json.load(f)
+            # Set up paths for storing individual learning materials
             self.single_files_path = paths["single_files_path"]
+            # Set up path for compiled review files
             self.review_files_path = paths["review_files_path"]
+            # Path to CSV file tracking all learning materials
             self.data_file = paths["data_file"]
+            # Directory where screenshots are temporarily stored
             self.screenshot_path = paths["screenshot_path"]
+            # CSS file path for consistent HTML styling
             self.styles = paths["styles"]
+            # Primary and backup browser paths for displaying review materials
             self.browser_path = paths["browser_path"]
             self.backup_browser_path = paths["backup_browser_path"]
             
-        self.df = pd.read_csv(self.data_file)  # Load the CSV file into a DataFrame
+        # Load existing learning materials data into DataFrame
+        self.df = pd.read_csv(self.data_file)
+        # Flag to track if a screenshot was included in current learning material
         self.screenshot_function_called = False
+        # Initialize OpenAI client for AI-assisted operations
         self.ai = OpenAIClient()
         
         
@@ -97,20 +106,22 @@ class SpacedMemoryReview:
         Returns:
             str: Base64 encoded string of the screenshot image
         """
+        
+        # Set flag to indicate screenshot was used in current learning material
         self.screenshot_function_called = True
-        # path where all screenshots are automatically saved even withoug manually saving them
-        # self.screenshot_path = "C:/Users/Rebecca/Pictures/Screenshots/"
-        # list of files in the directory. (no need to filter for folders as there are only files)
+       
+        # Get all files from screenshot directory (only contains image files)
         files = [f for f in os.listdir(self.screenshot_path)]
-        # sort the files in order of last modified for easy access to the most recently added file
+        # Sort files by modification time to find most recent screenshot
         files.sort(key=lambda x: os.path.getmtime(os.path.join(self.screenshot_path, x)))
-        # get the latest file
+        # Get path to most recent screenshot, ensuring proper path format
         raw_screenshot = os.path.join(self.screenshot_path, files[-1]).replace("\\", "/")
         
-        # convert the image to base64 to embed in the HTML file so that it can be sent to other devices
+        # Convert image to base64 for embedding in HTML
+        # This ensures portability of review files across devices
         with open(raw_screenshot, "rb") as image_file:
             base64_image = base64.b64encode(image_file.read()).decode("utf-8")
-        # return the base64 image        
+        
         return base64_image
     
         
@@ -128,17 +139,19 @@ class SpacedMemoryReview:
             The method will continuously prompt for input until valid data is provided
             or user explicitly exits by typing 'exit' at any prompt.
         """
+        #  
         while True:
             self.subject = input("Enter subject: ")
-            if self.subject.lower() == "exit":  # Check if "exit" is typed for subject
+            if self.subject.lower() == "exit":
                 print("Exitting...")
                 time.sleep(2)
                 print('Program has exited. No material has been submitted.')
-                return  "exitted" # Exit the function completely
-            if self.subject:  # if a subject is entered, break the loop
+                return "exitted"
+            if self.subject:  # Ensure subject is not empty
                 break
             print("Subject cannot be empty. Please enter a subject.")
             
+        # Loop until valid topic is entered or user exits
         while True:
             self.topic = input("Enter topic: ")
             if self.topic.lower() == "exit":
@@ -146,10 +159,11 @@ class SpacedMemoryReview:
                 time.sleep(2)
                 print('Program has exited. No material has been submitted.')
                 return "exitted"
-            if self.topic:  # Ensures both values are entered
-                break  # Exits the loop once valid input is provided
+            if self.topic:
+                break
             print("Topic cannot be empty. Please enter a topic")
          
+        # Handle optional screenshot input
         self.image = input("Do you have an image? (press y for yes an anything else for no): ").strip()
         if self.image.lower() == "exit":
             print("Exitting...")
@@ -157,8 +171,10 @@ class SpacedMemoryReview:
             print('Program has exited. No material has been submitted.')
             return "exitted"
         if self.image.lower() == "y":
+            # If user has image, process the most recent screenshot
             self.image = self.get_prepare_screenshot()
             
+        # Get optional text input (can be markdown formatted)
         self.learned_text = input("Enter learned text (Markdown supported. Press enter to skip.): ").strip()
         if self.learned_text.lower() == "exit":
             print("Exitting...")
@@ -166,7 +182,7 @@ class SpacedMemoryReview:
             print('Program has exited. No material has been submitted.')
             return "exitted"
         
-        
+        # Ensure at least one of text or image is provided
         while True:
             if self.screenshot_function_called or self.learned_text:
                 break
@@ -187,6 +203,7 @@ class SpacedMemoryReview:
                 if self.image.lower() == "y":
                     self.image = self.get_prepare_screenshot()
                 
+        # Get optional comma-separated list of related links
         self.links = input("Enter links (comma-separated): ").split(",")
         if self.links[0].lower() == "exit":
             print("Exitting...")
@@ -207,10 +224,12 @@ class SpacedMemoryReview:
 
         The file name is stored in self.new_file_name for later use.
         """
+        # 
         current_file_names = os.listdir(self.single_files_path)
+        # Get current date for potential use in filename
         today = datetime.now().strftime("%Y-%m-%d")
     
-        # Prompt the AI for a descriptive file name
+        # Create prompt for the AI to generate descriptive filename
         prompt = (f"Please suggest a descriptive and unique file name for an HTML file with the following details:\n"
               f"- Subject: {self.subject}\n"
               f"- Topic: {self.topic}\n"
@@ -223,8 +242,6 @@ class SpacedMemoryReview:
     
         # Get the AI response
         self.new_file_name = self.ai.get_response(prompt)
-        
-        #return self.new_file_name
         
         
     def text_to_html(self):
@@ -241,6 +258,9 @@ class SpacedMemoryReview:
         if self.learned_text == '':
             # if no text is provided, return. No text to convert.
             return
+            
+        # Use the AI to convert text/markdown to properly formatted HTML
+        # The prompt ensures we get clean HTML without any additional text or formatting
         return(self.ai.get_response(
             f"Convert the following text, which may be plain text or Markdown, into valid HTML format:\n\n"
             f"{self.learned_text}\n\n"
@@ -270,9 +290,11 @@ class SpacedMemoryReview:
         with open(self.single_files_path + "/" + self.new_file_name, "w", encoding="utf-8") as f:
             f.write(f"<!DOCTYPE html>\n")
             
+            # Load CSS styles for consistent formatting
             with open(self.styles, "r") as style:
                 css = style.read()
             
+            # Write HTML header with metadata, title, and CSS
             f.write(f"""<html>
     <head>
         <meta charset="UTF-8">
@@ -288,18 +310,21 @@ class SpacedMemoryReview:
             <div id="text">{self.text_to_html()}</div><br>
     """)
 
-            # Insert images if available
+            # Add screenshot if one was provided
             if self.screenshot_function_called:
                 f.write(f'<img src="data:image/png;base64,{self.image}" alt="Screenshot related to {self.topic}" width="300"><br>\n')
+            
+            # Start unordered list for links
             f.write('<br>\n<ul id="text">\n')
-            # Insert links if available
+            
+            # Add each link as a list item with target="_blank" for new tab
             for link in self.links:
                 f.write(f'<li><a href="{link.strip()}" target="_blank">{link.strip()}</a></li><br>\n')
+            
+            # Close all HTML tags
             f.write('</ul><p id="end"></p>')
             f.write("</section>\n</body>\n</html>")
 
-        
-                                      
         
     def learned_material_to_csv(self):
         """
@@ -315,17 +340,18 @@ class SpacedMemoryReview:
             If new material is added on the same day, it will overwrite the previous material.
         """
         a = self.get_todays_material()
+        # Exit if user chose to quit during input
         if a == "exitted":
             return 
         
-        # call the function to create the file name
+        # Generate appropriate filename for the new material by calling the create_file_name function
         self.create_file_name() 
         # call the function to convert the text to html
         self.text_image_links_to_html()
         
-        # Update the CSV file with the new data
+        # Get today's date in M/D/YYYY format (no leading zeros)
         self.today = datetime.now().strftime("%#m/%#d/%Y")
-        # convert the csv to a dataframe and confirm that the date is a string
+        # Load CSV into DataFrame, ensuring dates are treated as strings
         self.df = pd.read_csv(self.data_file, dtype={"Date": str})
         # locate the row with the current date and update the relevant row
         # by testing for the current date and updating the file path, subject and topic
@@ -363,27 +389,30 @@ class SpacedMemoryReview:
         
         self.today = datetime.now()
         
+        # Get start date from first entry in DataFrame
         start_date = datetime.strptime(self.df['Date'].iloc[0], "%m/%d/%Y")
+        # Calculate days since start of learning
         diff = (self.today - start_date).days
         
-        # Ensure diff is within valid range
+        # Check if we've reached the end of available data
         if diff >= len(self.df):
             return f"The program has already been completed. No more data to review."
 
+        # Initialize lists with today's material
         self.review_files = [self.df['FilePath'].iloc[diff]]
         self.dates = [self.df['Date'].iloc[diff]]
         self.review_subjects = [self.df['Subject'].iloc[diff]]
         self.review_topics = [self.df['Topic'].iloc[diff]]
 
+        # Add materials from previous intervals if they exist
         for days in INTERVALS:
             index = diff - days
-            if index >= 0:
+            if index >= 0:  # Only add if the material exists (not before start date)
                 self.review_files.append(self.df['FilePath'].iloc[index])
                 self.dates.append(self.df['Date'].iloc[index])
                 self.review_subjects.append(self.df['Subject'].iloc[index])
                 self.review_topics.append(self.df['Topic'].iloc[index])
                 
-        
         return self.review_files, self.dates, self.review_subjects, self.review_topics
 
     
@@ -414,11 +443,14 @@ class SpacedMemoryReview:
         lens = sum([len(str(file)) for file in files])
         if lens < (len(files)* 3) +1:
             return "No material to review."
-        file_date_version = str(self.today.strftime('%Y-%m-%d')) .replace(":","-")
-        
+            
+        # Create filename with today's date
+        file_date_version = str(self.today.strftime('%Y-%m-%d')).replace(":","-")
         review_file = self.review_files_path + "/" + file_date_version+"-review" + ".html"
         
+        # Create new review file
         with open(review_file, "w", encoding="utf-8") as rev_file:
+            # Write HTML header and load CSS styles
             rev_file.write(f"<!DOCTYPE html>\n")
             with open(self.styles, "r") as style:
                 css = style.read()
@@ -427,12 +459,14 @@ class SpacedMemoryReview:
                                <style>{css}</style></head>\n<body>\n<section>\n""")
             rev_file.write(f"""<header><h1>{file_date_version} Review Material</h1></header><br>""")
             
+            # Process each file that needs to be reviewed
             for index, i in enumerate(files):
-                if len(str(i)) > 4:
+                if len(str(i)) > 4:  # Check if file path is valid
                     blank = False
                     with open(i, "r", encoding="utf-8") as single_file:
                         full_content = single_file.read()
                         
+                        # Create header with date, subject, and topic
                         header = f"""
                            <ul style="padding-inline-start: 0px;">
                                 <li style="background-color: #a9b2a9; width: 100%"><strong>&nbsp;Date:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em style="color: white">&nbsp;{dates[index]}&nbsp;</em></strong></li>
@@ -442,13 +476,10 @@ class SpacedMemoryReview:
                            """
                            
                         rev_file.write(header)
-                        # Find the content within <section> tags
+                        # Extract content between text div and end paragraph
                         section_start = full_content.find('<div id="text">')
                         section_end = full_content.find('<p id="end">', section_start)
-
                         section_content = full_content[section_start:section_end+len('<p id="end">')]
-                        
-                        #rev_file.write(dates[files.index(i)] + "<br><br>\n")
                         rev_file.write(section_content)
                 else: 
                         blank = True
@@ -458,12 +489,13 @@ class SpacedMemoryReview:
             else:
                 rev_file.write("</section></body></html>")
       
+        # Get absolute path for browser
         file_path = os.path.abspath(review_file)
         print(f"Opening file in Edge: {file_path}")
        
+        # Try to open in Edge browser first, fall back to Chrome if Edge not available
         if os.path.exists(self.browser_path):
            webbrowser.get(f'"{self.browser_path}" %s').open(f"file://{file_path}")
-            
         else:
             print("Edge browser not found. \nOpening in Chrome browser")
             webbrowser.get("C:/Program Files/Google/Chrome/Application/chrome.exe %s").open(f"file://{file_path}")
