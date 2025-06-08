@@ -4,8 +4,9 @@ import json
 import webbrowser
 from datetime import datetime
 import pandas as pd
-from AI_class import OpenAIClient
+from AI_class import OpenAIClient, Reasoning_OpenAIClient
 import time
+from IPython.display import Markdown, display, HTML
 
 class SpacedMemoryReview:
     """
@@ -125,7 +126,7 @@ class SpacedMemoryReview:
         return base64_image
     
         
-    def get_todays_material(self):
+    def get_todays_material(self, ai_mode=False):
         """
         Collect today's learning material through user input.
 
@@ -139,7 +140,15 @@ class SpacedMemoryReview:
             The method will continuously prompt for input until valid data is provided
             or user explicitly exits by typing 'exit' at any prompt.
         """
-        #  
+        # provide material if the user used the generate_content_with_ai function
+        if ai_mode and self.generate_content_with_ai == 'exitted':
+             return 'exitted'
+        elif ai_mode:
+             self.subject = self.generate_content_with_ai(0)
+             self.topic = self.generate_content_with_ai(1)
+             self.learned_text = self.generate_content_with_ai(2)
+             return # remember about what to return in regards  to exitting and if there is no material.
+         
         while True:
             self.subject = input("Enter subject: ")
             if self.subject.lower() == "exit":
@@ -213,8 +222,69 @@ class SpacedMemoryReview:
         
         # this line is for testing purposes
         #return f"subject {self.subject} topic {self.topic} text {self.learned_text} image(s) {self.image} links {self.links}" 
+    def generate_content_with_ai(self):
+        """
+        Generate content using OpenAI based on the subject and topic.
+
+        Uses OpenAI to create a brief summary or description of the learning material
+        based on the provided subject and topic. This can be used to enhance the
+        learned text or provide additional context.
+
+        Returns:
+            str: Generated content from OpenAI, or None if no content was generated
+        """
         
+        self.ai = OpenAIClient()
+        message  = ('Here are the options for the content you can generate:\n'
+                    '1. Choose your own topic to learn.\n'
+                    '2. Have the system suggest a topic based on your past learning history.\n'
+                    '3. Choose a topic from our database of topics.\n')
         
+        display(Markdown(message))
+        
+        for i in range(3):
+            choice = input("Please enter the number of your choice (1, 2, or 3): ")
+            if choice.lower() == "exit":
+                print("Exitting...")
+                time.sleep(2)
+                print('Program has exited. No material has been submitted.')
+                return "exitted"
+            if choice in ("1", "2", "3"):
+                break
+            print("Invalid input. Please enter 1, 2, or 3.")
+            if i == 2:
+                print("Too many invalid attempts. Exiting...")
+                time.sleep(2)
+                print('Program has exited. No material has been submitted.')
+                return "exitted"
+            
+        # set variable for the reasoning AI client
+        self.reasoning_model = Reasoning_OpenAIClient()    
+        # If user chose option 1, prompt for subject and topic
+        if choice == "1":
+            self.user_subject = input("Enter the name or a short description of the subject you'd like to learn about: ")
+            if self.user_subject.lower() == "exit":
+                print("Exitting...")
+                time.sleep(2)
+                print('Program has exited. No material has been submitted.')
+                return "exitted"
+            self.examine_user_subject = self.reasoning_model.get_response(
+                f"You will receive a subject submitted by a user for a learning review program.\n\n"
+                f"Subject: '{self.user_subject}'\n\n"
+                f"Instructions:\n"
+                f"1. If the subject is incoherent, nonsensical, or meaningless, respond with one word only: 'incoherent'.\n"
+                f"2. If the subject is coherent:\n"
+                f"   - Provide learning material on the subject.\n"
+                f"   - The subject may be broad or specific. Do your best to infer the intended learning goal.\n"
+                f"   - Do NOT include any polite intros or conclusions (e.g., 'Hope this helps', 'Did you like it?').\n"
+                f"   - Keep the content to about 2 or 3 paragraphs (you can include tables or digrams if necessary).\n"
+                )
+
+            return self.examine_user_subject
+        
+    
+    
+    
     def create_file_name(self):
         """
         Generate a unique and descriptive file name for the learning material.
@@ -504,9 +574,9 @@ class SpacedMemoryReview:
             webbrowser.get("C:/Program Files/Google/Chrome/Application/chrome.exe %s").open(f"file://{file_path}")
          
             
-if __name__ == "__main__":
-    spaced_memory = SpacedMemoryReview()
-    print(spaced_memory.get_review_material())
-    
+#if __name__ == "__main__":
+    #spaced_memory = SpacedMemoryReview()
+    #print(spaced_memory.get_review_material())
+  
     
     
