@@ -234,7 +234,6 @@ class SpacedMemoryReview:
             str: Generated content from OpenAI, or None if no content was generated
         """
         
-        self.ai = OpenAIClient()
         message  = ('Here are the options for the content you can generate:\n'
                     '1. Choose your own topic to learn.\n'
                     '2. Have the system suggest a topic based on your past learning history.\n'
@@ -259,27 +258,51 @@ class SpacedMemoryReview:
                 return "exitted"
             
         # set variable for the reasoning AI client
-        self.reasoning_model = Reasoning_OpenAIClient()    
+        self.reasoning_model = Reasoning_OpenAIClient()
+        # use a fast model for coherence checks
+        self.nano_model = OpenAIClient(model_name='gpt-4.1-2025-04-14')  # Add this line for the fast model
         # If user chose option 1, prompt for subject and topic
         if choice == "1":
-            self.user_subject = input("Enter the name or a short description of the subject you'd like to learn about: ")
-            if self.user_subject.lower() == "exit":
-                print("Exitting...")
-                time.sleep(2)
-                print('Program has exited. No material has been submitted.')
-                return "exitted"
-            self.examine_user_subject = self.reasoning_model.get_response(
-                f"You will receive a subject submitted by a user for a learning review program.\n\n"
-                f"Subject: '{self.user_subject}'\n\n"
-                f"Instructions:\n"
-                f"1. If the subject is incoherent, nonsensical, or meaningless, respond with one word only: 'incoherent'.\n"
-                f"2. If the subject is coherent:\n"
-                f"   - Provide learning material on the subject.\n"
-                f"   - The subject may be broad or specific. Do your best to infer the intended learning goal.\n"
-                f"   - Do NOT include any polite intros or conclusions (e.g., 'Hope this helps', 'Did you like it?').\n"
-                f"   - Keep the content to about 2 or 3 paragraphs (you can include tables or digrams if necessary).\n"
-                )
+            max_attempts = 3
+            for attempt in range(max_attempts):
+                self.user_subject = input("Enter the name or a short description of the subject you'd like to learn about: ")
+                if self.user_subject.lower() == "exit":
+                    print("Exitting...")
+                    time.sleep(2)
+                    print('Program has exited. No material has been submitted.')
+                    return "exitted"
 
+                # --- FAST COHERENCE CHECK WITH NANO MODEL ---
+                nano_response = self.nano_model.get_response(
+                    f"Is the following subject coherent and meaningful for a learning program? "
+                    f"Respond ONLY with 'coherent' or 'incoherent'.\n\n"
+                    f"Subject: '{self.user_subject}'"
+                )
+                if str(nano_response).strip().lower() == "incoherent":
+                    print("The subject was incoherent. Please try again.")
+                    if attempt == max_attempts - 1:
+                        print("Too many incoherent attempts. Exiting...")
+                        time.sleep(2)
+                        print('Program has exited. No material has been submitted.')
+                        return "exitted"
+                    continue
+
+                # get already learned subjects from the DataFrame
+                # filter out NaN values (they are floats for some reason) and combine Subject and Topic columns
+                self.learned_subjects = [x for x in (self.df['Subject'] + ' - ' + self.df['Topic']).tolist() if type(x) != float]
+                self.examine_user_subject = self.reasoning_model.get_response(
+                    f"You will receive a subject submitted by a user for a learning review program.\n\n"
+                    f"Subject: '{self.user_subject}'\n\n"
+                    f"Previously Learned Subjects:\n{self.learned_subjects}\n\n"
+                    f"Instructions:\n"
+                    f"1. The submitted subject may be broad (e.g., 'biology') or specific (e.g., 'mitosis').\n"
+                    f"   - If the subject is specific, use it directly to generate content.\n"
+                    f"   - If the subject is general, choose any subtopic related to it.\n"
+                    f"2. You must avoid repeating topics that are already in the list of previously learned subjects.\n"
+                    f"3. Generate concise learning material (2 or 3 paragraphs). You may include tables or diagrams if helpful.\n"
+                    f"4. Do NOT include any intros, conclusions, or polite phrases."
+                )
+                break  # Only break if both checks pass
             return self.examine_user_subject
         
     
@@ -577,6 +600,5 @@ class SpacedMemoryReview:
 #if __name__ == "__main__":
     #spaced_memory = SpacedMemoryReview()
     #print(spaced_memory.get_review_material())
-  
-    
-    
+
+
