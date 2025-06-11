@@ -6,7 +6,7 @@ from datetime import datetime
 import pandas as pd
 from AI_class import OpenAIClient, Reasoning_OpenAIClient
 import time
-from IPython.display import Markdown, display, HTML
+from IPython.display import Markdown, display, HTML, clear_output 
 
 class SpacedMemoryReview:
     """
@@ -256,7 +256,9 @@ class SpacedMemoryReview:
                 time.sleep(2)
                 print('Program has exited. No material has been submitted.')
                 return "exitted"
-            
+        
+        # Clear the output of the user choices to keep the interface clean    
+        clear_output(wait=True)   
         # set variable for the reasoning AI client
         self.reasoning_model = Reasoning_OpenAIClient()
         # use a fast model for coherence checks
@@ -289,6 +291,7 @@ class SpacedMemoryReview:
 
                 # get already learned subjects from the DataFrame
                 # filter out NaN values (they are floats for some reason) and combine Subject and Topic columns
+                display(Markdown("generating content..."))
                 self.learned_subjects = [x for x in (self.df['Subject'] + ' - ' + self.df['Topic']).tolist() if type(x) != float]
                 self.examine_user_subject = self.reasoning_model.get_response(
                     f"You will receive a subject submitted by a user for a learning review program.\n\n"
@@ -299,10 +302,12 @@ class SpacedMemoryReview:
                     f"   - If the subject is specific, use it directly to generate content.\n"
                     f"   - If the subject is general, choose any subtopic related to it.\n"
                     f"2. You must avoid repeating topics that are already in the list of previously learned subjects.\n"
-                    f"3. Generate concise learning material (2 or 3 paragraphs). You may include tables or diagrams if helpful.\n"
+                    f"3. Generate concise learning material (3 or 4 paragraphs). You may include tables or diagrams if helpful.\n"
                     f"4. Do NOT include any intros, conclusions, or polite phrases."
                 )
                 break  # Only break if both checks pass
+            # clear the output of "generating content..." to keep the interface clean
+            clear_output(wait=True)
             return self.examine_user_subject
         
     
