@@ -220,8 +220,7 @@ class SpacedMemoryReview:
             print('Program has exited. No material has been submitted.')
             return "exitted"
         
-        # this line is for testing purposes
-        #return f"subject {self.subject} topic {self.topic} text {self.learned_text} image(s) {self.image} links {self.links}" 
+        
     def generate_content_with_ai(self):
         """
         Generate content using OpenAI based on the subject and topic.
@@ -321,11 +320,50 @@ class SpacedMemoryReview:
     def recommendation_content_with_ai(self):
         clear_output(wait=True)
         display(Markdown("generating content..."))
+        
         raw_all_topics = self.df['Subject'].dropna()  # Get unique topics from DataFrame
-        all_topics_lower = [topic.lower() for topic in raw_all_topics] # Convert to lowercase for case-insensitive comparison
-        print(all_topics_lower)
+        # Convert to lowercase for case-insensitive comparison and  remove extra space in case of double spaces
+        all_topics = [topic.lower().replace('  ',' ') for topic in raw_all_topics] 
+        # get all the unique topics ever used
+        overall_percentages = []
+        first_bucket = set(all_topics)  
+        
+        # Loop through each topic in the first bucket
+        for topic in first_bucket:
+            # Get the percentage of times this topic was used
+            percentage = all_topics.count(topic) / len(all_topics)
+            overall_percentages.append((topic, round(percentage, 2)))
         
         
+        # next bucket is the past week
+        last_learned_day = (datetime.now() - pd.to_datetime(self.df['Date'].iloc[0])).days
+        raw_past_week = self.df.loc[last_learned_day - 7 : last_learned_day - 1, 'Subject']
+        # use isinstance(str) to remove NaN values and convert to lowercase
+        past_week_bucket = [x.lower().replace('  ',' ') for x in raw_past_week if isinstance(x, str)]
+        past_week_percentages = []
+        for i in set(past_week_bucket):
+            percentage = past_week_bucket.count(i) / len(past_week_bucket)
+            past_week_percentages.append((i, round(percentage, 2)))
+        
+        # next bucket is the last third of the overall learning history
+        raw_last_third = self.df.loc[last_learned_day - (last_learned_day // 3): last_learned_day, 'Subject']
+        last_third_bucket = [x.lower().replace('  ',' ') for x in raw_last_third if isinstance(x, str)]
+        last_third_percentages = []
+        for i in set(last_third_bucket):
+            percentage = last_third_bucket.count(i) / len(last_third_bucket)
+            last_third_percentages.append((i, round(percentage, 2)))
+        
+        bucket_percentages = [overall_percentages, past_week_percentages, last_third_percentages]
+        weights = [0.2, 0.3, 0.5]  # Weights for each bucket
+        final_percentages = {}
+        for bucket in bucket_percentages:
+            for i in bucket:
+               topic, percentage = i
+               # Initialize final percentage with the overall percentage
+               final_percentages[topic] = percentage * weights[0]
+        
+        
+
     def create_file_name(self):
         """
         Generate a unique and descriptive file name for the learning material.
@@ -501,9 +539,9 @@ class SpacedMemoryReview:
         self.today = datetime.now()
         
         # Get start date from first entry in DataFrame
-        start_date = datetime.strptime(self.df['Date'].iloc[0], "%m/%d/%Y")
+        self.start_date = datetime.strptime(self.df['Date'].iloc[0], "%m/%d/%Y")
         # Calculate days since start of learning
-        diff = (self.today - start_date).days
+        diff = (self.today - self.start_date).days
         
         # Check if we've reached the end of available data
         if diff >= len(self.df):
