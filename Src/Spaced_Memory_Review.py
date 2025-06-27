@@ -299,6 +299,7 @@ class SpacedMemoryReview:
                 # get already learned subjects from the DataFrame
                 # filter out NaN values (they are floats for some reason) and combine Subject and Topic columns
             display(Markdown("generating content..."))
+            
             self.learned_subjects = [x for x in (self.df['Subject'] + ' - ' + self.df['Topic']).tolist() if type(x) != float]
             self.examine_user_subject = self.reasoning_model.get_response(
                     f"You will receive a subject submitted by a user for a learning review program.\n\n"
@@ -325,14 +326,14 @@ class SpacedMemoryReview:
         # Convert to lowercase for case-insensitive comparison and  remove extra space in case of double spaces
         all_topics = [topic.lower().replace('  ',' ') for topic in raw_all_topics] 
         # get all the unique topics ever used
-        overall_percentages = []
-        first_bucket = set(all_topics)  
+        overall_percentages = {}
+        ovreall_bucket = set(all_topics)  
         
         # Loop through each topic in the first bucket
-        for topic in first_bucket:
+        for topic in ovreall_bucket:
             # Get the percentage of times this topic was used
             percentage = all_topics.count(topic) / len(all_topics)
-            overall_percentages.append((topic, round(percentage, 2)))
+            overall_percentages[topic] = round(percentage, 2)  # Store the percentage rounded to 2 decimal places
         
         
         # next bucket is the past week
@@ -340,30 +341,107 @@ class SpacedMemoryReview:
         raw_past_week = self.df.loc[last_learned_day - 7 : last_learned_day - 1, 'Subject']
         # use isinstance(str) to remove NaN values and convert to lowercase
         past_week_bucket = [x.lower().replace('  ',' ') for x in raw_past_week if isinstance(x, str)]
-        past_week_percentages = []
-        for i in set(past_week_bucket):
-            percentage = past_week_bucket.count(i) / len(past_week_bucket)
-            past_week_percentages.append((i, round(percentage, 2)))
+        past_week_percentages = {}
+        for topic in set(past_week_bucket):
+            percentage = past_week_bucket.count(topic) / len(past_week_bucket)
+            past_week_percentages[topic] = round(percentage, 2)  # Store the percentage rounded to 2 decimal places
         
         # next bucket is the last third of the overall learning history
         raw_last_third = self.df.loc[last_learned_day - (last_learned_day // 3): last_learned_day, 'Subject']
         last_third_bucket = [x.lower().replace('  ',' ') for x in raw_last_third if isinstance(x, str)]
-        last_third_percentages = []
-        for i in set(last_third_bucket):
-            percentage = last_third_bucket.count(i) / len(last_third_bucket)
-            last_third_percentages.append((i, round(percentage, 2)))
+        last_third_percentages = {}
+        for topic in set(last_third_bucket):
+            percentage = last_third_bucket.count(topic) / len(last_third_bucket)
+            last_third_percentages[topic] = round(percentage, 2)  # Store the percentage rounded to 2 decimal places
         
-        bucket_percentages = [overall_percentages, past_week_percentages, last_third_percentages]
+        bucket_percentages = [overall_percentages, last_third_percentages, past_week_percentages]
+        # these are the weights for each bucket. They don't strictly have to add up to 1
+        # as we are simply weighing the importance of each bucket in the final recommendation.
         weights = [0.2, 0.3, 0.5]  # Weights for each bucket
-        final_percentages = {}
-        for bucket in bucket_percentages:
-            for i in bucket:
-               topic, percentage = i
-               # Initialize final percentage with the overall percentage
-               final_percentages[topic] = percentage * weights[0]
         
+        
+        final_scores = {}
+        # use the zip funciton to map the bucket percentages to the weights
+        # outer loop iterates over each bucket and its corresponding weight
+        # inner loop iterates over each topic and its percentage in the bucket
+        for bucket, weight in zip(bucket_percentages, weights):
+            for topic, pct in bucket.items():
+                # get each topic value and add the percentage multiplied by the weight to the final score
+                final_scores[topic] = final_scores.get(topic, 0) + (pct * weight)
+        
+        # Sort topics by final score in descending order
+        sorted_topics = sorted(final_scores.items(), key=lambda x: x[1], reverse=True)
+        
+        # Get the top 3 topics. (this will get first three items in the dict even if there are idential
+        # topics with the same score, so it is not strictly top 3. This adds a bit of randomness to the selection.)
+        top_three = [x[0] +': ' +  str(round(x[1], 2)) for x in sorted_topics[:3]]
+        # print(top_three)
+        
+        self.learned_subjects = [x for x in (self.df['Subject'] + ' - ' + self.df['Topic']).tolist() if type(x) != float]
+        
+        # get the previously learned subjects from the DataFrame to inform the AI about what has been learned
+        prompt = f""" You are a recommendation system. Based on the user's past learning history 
+                      (given below), suggest a new subject and topic the user has not yet studied.
+                      
+                    - Learned subjects and topics (format: "Subject - Topic"): {self.learned_subjects}
+                    - Top 3 most studied topics: {top_three}
+
+                    Return a **Python list** with a suggested subject and topic, each as a one- or two-word string. 
+                    Ensure the subject-topic pair is not already in the list of learned subjects. 
+                    Return only the list, e.g., ["Biology", "Genetics"] without any introductory or explanatory text.
+        """
+        # might be good to set up a connection to a database (postgregsql)
+        # have all the subjects and topics there and test the ai response to see if the suggestion 
+        # is already in the database. If it is, ask the AI to suggest another one.
+        # use a query like this: select * from subjects where subject = ai_subject_topic[0] and topic = ai_subject_topic[1]
+        
+        recommender = OpenAIClient(model_name='gpt-4.1-mini', system_role_content="Your are a recommendation system",
+                                   temperature=0.7, top_p=0.9)  
+        
+        # we have to remember to get the subject and topic from recommender to the original
+        # submission method to submit to the csv file as that is crucial for other mehtods
+        
+        # must turn response to a list as the AI will return a string representation of a list
+        ai_recommendation = recommender.get_response(prompt).split(',')
+        
+        # ...existing code...
+        # Parse the AI recommendation to extract subject and topic
+        self.rec_subject = ai_recommendation[0].strip().strip('[]"\'')
+        self.rec_topic = ai_recommendation[1].strip().strip('[]"\'')
+        print(self.rec_subject, self.rec_topic)
+        
+        # Generate content based on the recommended subject and topic
+        content_prompt = f"""Generate learning material for the following subject and topic:
+
+        Subject: {self.rec_subject}
+        Topic: {self.rec_topic}
+
+        Requirements:
+        - Content should be readable by an average undergraduate student in 4-5 minutes
+        - Assume the reader has only very limited familiarity with the subject - explain concepts clearly
+        - Do NOT assume expertise or advanced knowledge
+        - Write clear, informative content with explanations appropriate for the time limit
+        - Include key concepts, definitions, examples, and practical applications
+        - Break down complex ideas into digestible parts
+        - You MAY use Markdown formatting, HTML elements, symbols, tables, bullet points, numbered lists, or visual elements (→, ★, ⚠️, etc.) to enhance understanding, but this is optional
+        - Focus on factual, memorable information that can be absorbed in the time frame
+        - Do NOT include introductions, conclusions, or conversational phrases
+
+        Provide only the educational content that can be comprehensively read and understood in 4-5 minutes."""
+        
+        rec_ai_content = Reasoning_OpenAIClient(system_role_content="You are a helpful assistant for generating learning material.")
+        self.rec_learned_text = rec_ai_content.get_response(content_prompt)
+        clear_output(wait=True)
+        
+        # this is the real code I am just testing with only the content
+        #return [self.rec_subject, self.rec_topic, self.rec_learned_text]
+        return self.rec_learned_text
         
 
+        
+        
+        
+        
     def create_file_name(self):
         """
         Generate a unique and descriptive file name for the learning material.
