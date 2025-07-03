@@ -141,13 +141,23 @@ class SpacedMemoryReview:
             or user explicitly exits by typing 'exit' at any prompt.
         """
         # provide material if the user used the generate_content_with_ai function
-        if ai_mode and self.generate_content_with_ai == 'exitted':
-             return
-        elif ai_mode:
-             self.subject = self.generate_content_with_ai(0)
-             self.topic = self.generate_content_with_ai(1)
-             self.learned_text = self.generate_content_with_ai(2)
-             return # remember about what to return in regards  to exitting and if there is no material.
+        if ai_mode:
+            
+            ai_result = self.generate_content_with_ai()
+            time.sleep(2)
+            if ai_result == 'exitted' or ai_result == '__Program has exited__.\n\n *No material has been submitted*.':
+                return "exitted"
+            
+            # Extract subject, topic, and content from AI result tuple
+            self.subject = ai_result[0]
+            self.topic = ai_result[1]
+            self.learned_text = ai_result[2]
+            
+            # Set other attributes for AI mode
+            self.image = ""  # No image in AI mode
+            self.links = [""]  # No links in AI mode
+            self.screenshot_function_called = False  # No screenshot in AI mode
+            return
          
         while True:
             self.subject = input("Enter subject: ")
@@ -266,7 +276,7 @@ class SpacedMemoryReview:
         
     def user_content_with_ai(self):
         
-        # Clear the output of the user self.choices to keep the interface clean    
+        # Clear the output of the user self.choices (from the parent ai method) to keep the interface clean    
         clear_output(wait=True)   
         # set variable for the reasoning AI client
         self.reasoning_model = Reasoning_OpenAIClient()
@@ -313,10 +323,21 @@ class SpacedMemoryReview:
                     f"3. Generate concise learning material (3 or 4 paragraphs). You may include tables or diagrams if helpful.\n"
                     f"4. Do NOT include any intros, conclusions, or polite phrases."
                 )
+            
+            # Extract topic from AI response for use in AI mode
+            topic_prompt = f"""Based on the following learning content, extract or determine the main topic (1-2 words maximum):
+
+                            Content: {self.examine_user_subject[:200]}...
+
+                            Return only the topic name, no explanations."""
+            
+            self.user_topic = self.nano_model.get_response(topic_prompt).strip()
+            
             break  # Only break if both checks pass
             # clear the output of "generating content..." to keep the interface clean
         clear_output(wait=True)
-        return self.examine_user_subject
+        # Return tuple containing subject, topic, and content for AI mode
+        return (self.user_subject, self.user_topic, self.examine_user_subject)
         
     def recommendation_content_with_ai(self):
         clear_output(wait=True)
@@ -404,11 +425,10 @@ class SpacedMemoryReview:
         # must turn response to a list as the AI will return a string representation of a list
         ai_recommendation = recommender.get_response(prompt).split(',')
         
-        # ...existing code...
         # Parse the AI recommendation to extract subject and topic
         self.rec_subject = ai_recommendation[0].strip().strip('[]"\'')
         self.rec_topic = ai_recommendation[1].strip().strip('[]"\'')
-        print(self.rec_subject, self.rec_topic)
+        # Removed print statement to avoid unwanted output
         
         # Generate content based on the recommended subject and topic
         content_prompt = f"""Generate learning material for the following subject and topic:
@@ -418,7 +438,7 @@ class SpacedMemoryReview:
 
         Requirements:
         - Content should be readable by an average undergraduate student in 4-5 minutes
-        - Assume the reader has only very limited familiarity with the subject - explain concepts clearly
+        - Assume the reader has no familiarity with the subject - explain concepts clearly
         - Do NOT assume expertise or advanced knowledge
         - Write clear, informative content with explanations appropriate for the time limit
         - Include key concepts, definitions, examples, and practical applications
@@ -433,14 +453,26 @@ class SpacedMemoryReview:
         self.rec_learned_text = rec_ai_content.get_response(content_prompt)
         clear_output(wait=True)
         
-        # this is the real code I am just testing with only the content
-        #return [self.rec_subject, self.rec_topic, self.rec_learned_text]
-        return self.rec_learned_text
+        # Return tuple containing subject, topic, and content for AI mode
+        # print(self.rec_subject, '---', self.rec_topic, '---', self.rec_learned_text[:50], '...','\n')
+        return (self.rec_subject, self.rec_topic, self.rec_learned_text)
         
 
         
+    def database_content_with_ai(self):
+        """
+        Generate content from a database of topics (placeholder method).
         
+        This method is a placeholder for future implementation of database-driven
+        content generation. Currently returns a message indicating it's not yet implemented.
         
+        Returns:
+            str: Message indicating the method is not implemented
+        """
+        clear_output(wait=True)
+        display(Markdown("Database content generation is not yet implemented."))
+        time.sleep(2)
+        return "Database content generation is not yet implemented."
         
     def create_file_name(self):
         """
@@ -553,9 +585,13 @@ class SpacedMemoryReview:
             f.write("</section>\n</body>\n</html>")
 
         
-    def learned_material_to_csv(self):
+    def learned_material_to_csv(self, ai_mode=False):
         """
         Process and save new learning material to the tracking CSV file.
+
+        Args:
+            ai_mode (bool): If True, uses AI-generated content instead of manual input.
+                           Default is False for manual input mode.
 
         Workflow:
         1. Collect material through get_todays_material()
@@ -566,7 +602,7 @@ class SpacedMemoryReview:
         Note:
             If new material is added on the same day, it will overwrite the previous material.
         """
-        a = self.get_todays_material()
+        a = self.get_todays_material(ai_mode=ai_mode)
         # Exit if user chose to quit during input
         if a == "exitted":
             return 
@@ -729,10 +765,4 @@ class SpacedMemoryReview:
         else:
             print("Edge browser not found. \nOpening in Chrome browser")
             webbrowser.get("C:/Program Files/Google/Chrome/Application/chrome.exe %s").open(f"file://{file_path}")
-         
-            
-#if __name__ == "__main__":
-    #spaced_memory = SpacedMemoryReview()
-    #print(spaced_memory.get_review_material())
-
 

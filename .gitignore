@@ -9,4 +9,6 @@ __pycache__/
 # Ignore the personal configuration file
 config.json
 
+# Ignore notes and database plan which are for my own reference
 notes.ipynb
+database_plan.png
