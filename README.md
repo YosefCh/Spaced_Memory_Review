@@ -32,7 +32,6 @@ This project is an intelligent spaced repetition learning system that helps you 
 
 3. **🗄️ Database Mode** *(Coming Soon)*
    - Curated database of educational topics
-   - Structured learning paths
    - Quality-assured content selection
 
 ### AI Content Features:
@@ -83,7 +82,7 @@ This project is an intelligent spaced repetition learning system that helps you 
      - Text content or screenshots
      - Optional links
 
-   ### 🤖 AI Mode (Recommended)
+   ### 🤖 AI Mode
    - Run the "AI Mode: Generate and Submit Learning Material" cell
    - Choose from three AI options:
      1. **User Choice**: Enter any subject you want to learn
