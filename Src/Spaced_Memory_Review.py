@@ -627,8 +627,13 @@ class SpacedMemoryReview:
         
         # overwriting the old csv file with the new learned material
         self.df.to_csv(self.data_file, index=False)
-    
-    
+        clear_output(wait=True)
+        display(Markdown(f" ### **New material saved successfully!**\n\n"
+                         f"__File:__ `{self.new_file_name}`\n\n"
+                         f"__Subject:__ `{self.subject}`\n\n"
+                         f"__Topic:__ `{self.topic}`"
+                         ))
+
 
     def get_review_material(self):
         """
