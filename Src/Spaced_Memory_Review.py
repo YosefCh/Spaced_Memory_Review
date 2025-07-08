@@ -324,20 +324,28 @@ class SpacedMemoryReview:
                     f"4. Do NOT include any intros, conclusions, or polite phrases."
                 )
             
-            # Extract topic from AI response for use in AI mode
+            # Extract both subject and topic from AI response for use in AI mode
+            subject_prompt = f"""Based on the user's input: '{self.user_subject}' and the generated content below, 
+                            extract the main subject area (1-2 words maximum):
+
+                            Content: {self.examine_user_subject[:200]}...
+
+                            Return only the subject name (e.g., 'Biology', 'Physics', 'History'), no explanations."""
+            
             topic_prompt = f"""Based on the following learning content, extract or determine the main topic (1-2 words maximum):
 
                             Content: {self.examine_user_subject[:200]}...
 
                             Return only the topic name, no explanations."""
             
+            self.extracted_subject = self.nano_model.get_response(subject_prompt).strip()
             self.user_topic = self.nano_model.get_response(topic_prompt).strip()
             
             break  # Only break if both checks pass
             # clear the output of "generating content..." to keep the interface clean
         clear_output(wait=True)
         # Return tuple containing subject, topic, and content for AI mode
-        return (self.user_subject, self.user_topic, self.examine_user_subject)
+        return (self.extracted_subject, self.user_topic, self.examine_user_subject)
         
     def recommendation_content_with_ai(self):
         clear_output(wait=True)
