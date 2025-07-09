@@ -445,7 +445,7 @@ class SpacedMemoryReview:
         Topic: {self.rec_topic}
 
         Requirements:
-        - Content should be readable by an average undergraduate student in 4-5 minutes
+        - Content should be understandable for an average undergraduate student and should be about 3-4 paragraphs long
         - Assume the reader has no familiarity with the subject - explain concepts clearly
         - Do NOT assume expertise or advanced knowledge
         - Write clear, informative content with explanations appropriate for the time limit
