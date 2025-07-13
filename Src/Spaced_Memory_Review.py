@@ -317,7 +317,7 @@ class SpacedMemoryReview:
                     f"Previously Learned Subjects:\n{self.learned_subjects}\n\n"
                     f"Instructions:\n"
                     f"1. The submitted subject may be broad (e.g., 'biology') or specific (e.g., 'mitosis').\n"
-                    f"   - If the subject is specific, use it directly to generate content.\n"
+                    f"   - If the subject is specific, use it directly to generate content (high school level).\n"
                     f"   - If the subject is general, choose any subtopic related to it.\n"
                     f"2. You must avoid repeating topics that are already in the list of previously learned subjects.\n"
                     f"3. Generate concise learning material (3 or 4 paragraphs). You may include tables or diagrams if helpful.\n"
@@ -445,7 +445,7 @@ class SpacedMemoryReview:
         Topic: {self.rec_topic}
 
         Requirements:
-        - Content should be understandable for an average undergraduate student and should be about 3-4 paragraphs long
+        - Content should be understandable for an average high school student and should be about 3-4 paragraphs long
         - Assume the reader has no familiarity with the subject - explain concepts clearly
         - Do NOT assume expertise or advanced knowledge
         - Write clear, informative content with explanations appropriate for the time limit
