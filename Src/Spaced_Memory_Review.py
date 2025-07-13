@@ -167,6 +167,8 @@ class SpacedMemoryReview:
                 print('Program has exited. No material has been submitted.')
                 return "exitted"
             if self.subject:  # Ensure subject is not empty
+                # Simple spell check for subject
+                self.subject = self.simple_spell_check(self.subject, "subject")
                 break
             print("Subject cannot be empty. Please enter a subject.")
             
@@ -179,6 +181,8 @@ class SpacedMemoryReview:
                 print('Program has exited. No material has been submitted.')
                 return "exitted"
             if self.topic:
+                # Simple spell check for topic
+                self.topic = self.simple_spell_check(self.topic, "topic")
                 break
             print("Topic cannot be empty. Please enter a topic")
          
@@ -340,6 +344,10 @@ class SpacedMemoryReview:
             
             self.extracted_subject = self.nano_model.get_response(subject_prompt).strip()
             self.user_topic = self.nano_model.get_response(topic_prompt).strip()
+            
+            # Apply spell check to AI-extracted subject and topic
+            self.extracted_subject = self.simple_spell_check(self.extracted_subject, "subject")
+            self.user_topic = self.simple_spell_check(self.user_topic, "topic")
             
             break  # Only break if both checks pass
             # clear the output of "generating content..." to keep the interface clean
@@ -782,4 +790,31 @@ class SpacedMemoryReview:
         else:
             print("Edge browser not found. \nOpening in Chrome browser")
             webbrowser.get("C:/Program Files/Google/Chrome/Application/chrome.exe %s").open(f"file://{file_path}")
+    
+    def simple_spell_check(self, text, text_type="text"):
+        """
+        Simple AI spell check for subjects and topics.
+        Only fixes obvious spelling errors, doesn't change content.
+        """
+        try:
+            # Very conservative prompt to only fix clear spelling errors
+            prompt = f"""Only correct obvious spelling errors in this {text_type}. 
+            Do NOT change abbreviations, technical terms, or proper formatting.
+            If no spelling error exists, return the text exactly as provided.
+            
+            {text_type.title()}: '{text}'
+            
+            Return only the corrected text, nothing else."""
+            
+            corrected = self.ai.get_response(prompt).strip()
+            
+            # Only apply if there's a clear difference and it's not just reformatting
+            if corrected != text and len(corrected.split()) == len(text.split()):
+                print(f"  Spell check: '{text}' → '{corrected}'")
+                return corrected
+            else:
+                return text
+        except:
+            # If AI fails, return original
+            return text
 
