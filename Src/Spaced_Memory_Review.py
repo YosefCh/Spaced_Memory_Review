@@ -562,6 +562,10 @@ class SpacedMemoryReview:
                 css = style.read()
             
             # Write HTML header with metadata, title, and CSS
+            # Handle text_to_html() return value to avoid "None" in HTML output
+            text_content = self.text_to_html()
+            text_html = text_content if text_content is not None else ""
+            
             f.write(f"""<html>
     <head>
         <meta charset="UTF-8">
@@ -574,7 +578,7 @@ class SpacedMemoryReview:
                 <h1>{self.subject}: {self.topic}</h1>
             </header>
             <div id=date>{datetime.now().strftime("%m/%d/%Y")}</div>
-            <div id="text">{self.text_to_html()}</div><br>
+            <div id="text">{text_html}</div><br>
     """)
 
             # Add screenshot if one was provided
