@@ -15,7 +15,7 @@ folders = [paths['single_files_path'], paths['review_files_path']]
 
 # Set a flag for testing mode
 # This flag can be used to switch between testing and production modes
-is_testing = True  # Set to True for testing mode
+is_testing = False  # Set to True for testing mode
 
 # Use separate paths for testing mode
 if is_testing:
