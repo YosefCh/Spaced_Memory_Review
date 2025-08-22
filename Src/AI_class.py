@@ -23,7 +23,7 @@ class OpenAIClient:
     """
  
     def __init__(self, api_key=API_KEY, 
-                 model_name="gpt-4.1-mini", 
+                 model_name="gpt-5-chat-latest", 
                  max_tokens=4096, 
                  system_role_content="You are a helpful assistant.", 
                  temperature=.5, 
@@ -149,16 +149,8 @@ class Reasoning_OpenAIClient:
             print(e)
             
             
-if __name__ == '__main__':
-    """
-    import openai
-
-    openai.api_key = API_KEY  # Replace with your actual API key
-
-    models = openai.models.list()
-    model_ids = [model.id for model in models.data]
-    # print(model_ids)
-    for i in model_ids:
-        print(i)
-    """
+# if __name__ == '__main__':
+    
+    
+    
     
