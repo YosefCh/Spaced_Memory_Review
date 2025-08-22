@@ -285,7 +285,7 @@ class SpacedMemoryReview:
         # set variable for the reasoning AI client
         self.reasoning_model = Reasoning_OpenAIClient()
         # use a fast model for coherence checks
-        self.nano_model = OpenAIClient(model_name='gpt-4.1-2025-04-14')  # Add this line for the fast model
+        self.nano_model = OpenAIClient(model_name='gpt-5-chat-latest')  # Add this line for the fast model
         # If user chose option 1, prompt for subject and topic
         max_attempts = 3
         for attempt in range(max_attempts):
@@ -432,7 +432,7 @@ class SpacedMemoryReview:
         # is already in the database. If it is, ask the AI to suggest another one.
         # use a query like this: select * from subjects where subject = ai_subject_topic[0] and topic = ai_subject_topic[1]
         
-        recommender = OpenAIClient(model_name='gpt-4.1-mini', system_role_content="Your are a recommendation system",
+        recommender = OpenAIClient(model_name='gpt-5-chat-latest', system_role_content="Your are a recommendation system",
                                    temperature=0.7, top_p=0.9)  
         
         # we have to remember to get the subject and topic from recommender to the original
@@ -465,7 +465,7 @@ class SpacedMemoryReview:
 
         Provide only the educational content that can be comprehensively read and understood in 4-5 minutes."""
         
-        rec_ai_content = Reasoning_OpenAIClient(system_role_content="You are a helpful assistant for generating learning material.")
+        rec_ai_content = OpenAIClient(system_role_content="You are a helpful assistant for generating learning material.")
         self.rec_learned_text = rec_ai_content.get_response(content_prompt)
         clear_output(wait=True)
         
@@ -475,20 +475,6 @@ class SpacedMemoryReview:
         
 
         
-    def database_content_with_ai(self):
-        """
-        Generate content from a database of topics (placeholder method).
-        
-        This method is a placeholder for future implementation of database-driven
-        content generation. Currently returns a message indicating it's not yet implemented.
-        
-        Returns:
-            str: Message indicating the method is not implemented
-        """
-        clear_output(wait=True)
-        display(Markdown("Database content generation is not yet implemented."))
-        time.sleep(2)
-        return "Database content generation is not yet implemented."
         
     def create_file_name(self):
         """
