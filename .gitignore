@@ -3,7 +3,7 @@ __pycache__/
 *.pyc
 
 # Ignore CSV files (user-submitted data)
-*.csv
+learned_material.csv
 
 *.html
 # Ignore the personal configuration file
