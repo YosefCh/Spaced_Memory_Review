@@ -5,7 +5,7 @@ This project is an intelligent spaced repetition learning system that helps you 
 
 ## ✨ Features
 - 📝 **Manual Mode**: Easy submission of learning materials (text and screenshots)
-- 🤖 **AI Mode**: Automated content generation with two intelligent options
+- 🤖 **AI Mode**: Automated content generation with three intelligent options
 - 🎯 Smart scheduling of review intervals using spaced repetition algorithms
 - 🌐 Browser-based review interface with automatic file opening
 - 📊 Organized by subjects and topics with metadata tracking
