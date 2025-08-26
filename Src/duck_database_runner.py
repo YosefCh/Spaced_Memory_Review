@@ -37,7 +37,7 @@ def main():
     df.loc[df['Topic'].notna(), 'Topic'] = df.loc[df['Topic'].notna(), 'Topic'].str.replace(r'\s+', ' ', regex=True)
     
     # Convert Date back to string format for DuckDB compatibility
-    df['Date'] = df['Date'].dt.strftime('%m/%d/%Y')
+    #df['Date'] = df['Date'].dt.strftime('%m/%d/%Y')
     
 
     
