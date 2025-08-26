@@ -2,10 +2,13 @@
 __pycache__/
 *.pyc
 
-# Ignore CSV files (user-submitted data)
+# Ignore CSV files (user-submitted data) and query outputs
 learned_material.csv
+query_output.csv
 
+# Ignore my learned material saved as HTML files
 *.html
+
 # Ignore the personal configuration file
 config.json
 
