@@ -2,7 +2,7 @@ import subprocess
 import pandas as pd
 from IPython.display import Markdown, display, clear_output
 
-def run_query(sql_query):
+def run_query(sql_query, display_output=True):
     """
     Simple function to run a SQL query using duck_database_runner.py
     
@@ -12,13 +12,19 @@ def run_query(sql_query):
     # Write the query to the SQL file
     with open("sql_query.sql", "w") as f:
         f.write(sql_query)
-
-    print("Running query...")
+    
+    if display_output:
+        print("Running query...")
+    
     try:
         # must use subprocess as the notebook environment may not support direct execution
         # of the script due to environment constraints
         subprocess.run(['python', 'C:/Users/Rebecca/OneDrive/Documents/Review/Src/duck_database_runner.py'], 
                        check=True, capture_output=True)
+        
+        # If display_output is False, just return after CSV is written
+        if not display_output:
+            return
         
         # Clear the "Running query..." message and display results
         clear_output(wait=True)
