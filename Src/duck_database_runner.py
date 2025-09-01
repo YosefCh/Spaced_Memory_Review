@@ -37,13 +37,12 @@ def main():
     df.loc[df['Topic'].notna(), 'Topic'] = df.loc[df['Topic'].notna(), 'Topic'].str.replace(r'\s+', ' ', regex=True)
     
     # Convert Date back to string format for DuckDB compatibility
-    #df['Date'] = df['Date'].dt.strftime('%m/%d/%Y')
-    
+    # df['Date'] = df['Date'].dt.strftime('%Y%m/%d')
 
-    
-    # Create the view in DuckDB
-    con.execute("CREATE OR REPLACE VIEW learned_material AS SELECT * FROM df")
 
+    # Create the view in DuckDB with proper date casting
+    con.execute("CREATE OR REPLACE VIEW learned_material AS SELECT Index, Date::DATE as Date, FilePath, Subject, Topic FROM df")
+    
     try:
         # Run the query
         print("Running query...")
