@@ -5,12 +5,14 @@ def natural_language_to_query(natural_language):
     
     # necessary if the output query is to be displayed to the user
     # from IPython.display import Markdown, display
-    from IPython.display import clear_output
+    from IPython.display import display, clear_output, Markdown
     from AI_class import OpenAIClient
     import query_runner
     import time
     a = OpenAIClient()
     
+    
+    display(Markdown(f"**Your question:** {natural_language}"))
     print('Fetching context data from the database...\n')
     time.sleep(1)
     clear_output(wait=True)
@@ -67,7 +69,9 @@ def natural_language_to_query(natural_language):
                                     """)
 
     # optional to see the query generated
-    #print(z)
-    
+    #display(Markdown(f"__Your question:__ {natural_language}"))
+    print(f"Generated SQL query: '\n'")
+    display(Markdown(f"```sql\n{z}\n```"))
+
     return query_runner.run_query(z)
         
