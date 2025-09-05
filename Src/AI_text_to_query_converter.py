@@ -58,7 +58,7 @@ def natural_language_to_query(natural_language):
     Two additional points to keep in mind:
     1. The filepaths are long, so if the users request includes the filepahts, configure the query to have the filepaths column as the last column in the query results.
     2. As the user will be using natural language, the preference for an "ORDER BY" will not necessarily be explicitly stated. Therefore, use the "ORDER BY" clause in a way we can assume the user would want it.
-    3. If the user requests someting unrelated to the database or something incoherent, respond with "I am sorry, but I cannot assist with that request."
+    3. If the user requests someting unrelated to the database or something incoherent, respond with "Invalid Query."
     """
     
     print("Generating query...\n")
@@ -70,6 +70,10 @@ def natural_language_to_query(natural_language):
 
     # optional to see the query generated
     #display(Markdown(f"__Your question:__ {natural_language}"))
+    if z == "Invalid Query.":
+        error_message = "### **The system was unable to generate a valid SQL query based on your input.**\n\nPlease try rephrasing your question or providing more specific details about the data you are looking for."
+        display(Markdown(error_message))
+        return
     print(f"Generated SQL query: '\n'")
     display(Markdown(f"```sql\n{z}\n```"))
 
