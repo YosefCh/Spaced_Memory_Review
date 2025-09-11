@@ -1,7 +1,7 @@
 
 
 # AI_text_to_query_converter.py
-def natural_language_to_query(natural_language):
+def natural_language_to_query(natural_language, display_output=True):
     
     # necessary if the output query is to be displayed to the user
     # from IPython.display import Markdown, display
@@ -74,8 +74,14 @@ def natural_language_to_query(natural_language):
         error_message = "### **The system was unable to generate a valid SQL query based on your input.**\n\nPlease try rephrasing your question or providing more specific details about the data you are looking for."
         display(Markdown(error_message))
         return
-    print(f"Generated SQL query: '\n'")
+    print(f"Generated SQL query: \n")
     display(Markdown(f"```sql\n{z}\n```"))
+    
+    time.sleep(1)
+    # when display output is false we must clear output here as it we don't have it done for us in the query_runner function
+    clear_output(wait=True)
 
-    return query_runner.run_query(z)
-        
+    if display_output:
+        return query_runner.run_query(z)
+    else:
+        return query_runner.run_query(z, display_output=False)
