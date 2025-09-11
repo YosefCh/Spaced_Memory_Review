@@ -1,5 +1,6 @@
 import subprocess
 import pandas as pd
+import time
 from IPython.display import Markdown, display, clear_output
 
 def run_query(sql_query, display_output=True):
@@ -8,13 +9,16 @@ def run_query(sql_query, display_output=True):
     
     Args:
         sql_query (str): The SQL query to execute
+        
+        display_output (bool): Whether to display the output in a scrollable HTML table. Default is True.
     """
     # Write the query to the SQL file
     with open("sql_query.sql", "w") as f:
         f.write(sql_query)
-    
-    if display_output:
-        print("Running query...")
+
+    # default is to display output. The ai function which uses context data to generate queries uses this function without displaying output
+    # as its not necessary to show the user the context data. 
+    print("Running query...")
     
     try:
         # must use subprocess as the notebook environment may not support direct execution
@@ -22,8 +26,11 @@ def run_query(sql_query, display_output=True):
         subprocess.run(['python', 'C:/Users/Rebecca/OneDrive/Documents/Review/Src/duck_database_runner.py'], 
                        check=True, capture_output=True)
         
-        # If display_output is False, just return after CSV is written
-        if not display_output:
+        # If display_output is False (for ai function), just return after CSV is written
+        if not display_output:  
+            clear_output(wait=True) 
+            # need to print something to clear the "Running query..." message
+            print('  ')# Clear the "Running query..." message
             return
         
         # Clear the "Running query..." message and display results
