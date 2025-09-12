@@ -1,7 +1,4 @@
-
-
-# AI_text_to_query_converter.py
-def natural_language_to_query(natural_language, display_output=True):
+def natural_language_to_query(natural_language, display_output=True, purpose="query"):
     
     # necessary if the output query is to be displayed to the user
     # from IPython.display import Markdown, display
@@ -22,44 +19,97 @@ def natural_language_to_query(natural_language, display_output=True):
     with open('query_output.csv', 'r') as f:
         data = f.read()
 
-    context = f"""I have a spaced memory reiview program/app where users submit material or have an AI generate material for me to learn and review over time. 
-    My progran writes the material to a duckdb database and I have a query tool using real sql queries to understand my data better.
-    I want you to help me generate SQL queries for users who are non-technical and do not know SQL. They will submit a question about the data in natural
-    language and you will generate the SQL query for them to use in my app. 
+    if purpose == "summary":
+        context = f"""I have a spaced memory review program/app where users submit material or have an AI generate material for me to learn and review over time. 
+        My program writes the material to a duckdb database and I have a query tool using real sql queries to understand my data better.
+        
+        IMPORTANT: This request is for CONTENT SUMMARIZATION purposes. The user wants to identify individual files/records to read and summarize their content.
+        
+        CRITICAL RULES FOR SUMMARY QUERIES:
+        1. NEVER use aggregation functions (COUNT, SUM, GROUP BY, HAVING, etc.)
+        2. ALWAYS return individual records, not grouped or counted data
+        3. The goal is to get a list of specific files/materials to read and summarize
+        4. When user says "summarize", "give me a summary", or similar - they want the INDIVIDUAL RECORDS that contain the material to be summarized
+        5. Focus on SELECT statements that return individual rows of data
+        6. ALWAYS include FilePath in the SELECT clause as this is needed to read the files
+        7. Include Subject and Topic to help identify what each file contains
+        8. Use WHERE clauses to filter for the specific material they want
+        
+        SELECT FORMAT for summaries: SELECT Subject, Topic, FilePath FROM learned_material WHERE [conditions]
+        
+        Example interpretations:
+        - "Summarize my math topics" → SELECT Subject, Topic, FilePath FROM learned_material WHERE Subject ILIKE '%math%'
+        - "Give me a summary of physics from last month" → SELECT Subject, Topic, FilePath FROM learned_material WHERE Subject ILIKE '%physics%' AND Date >= CURRENT_DATE - INTERVAL '1 month'
+        - "Summarize everything I learned about programming" → SELECT Subject, Topic, FilePath FROM learned_material WHERE Subject ILIKE '%programming%' OR Topic ILIKE '%programming%'
+        
+        The database is called 'learned_material' and the columns are as follows:
+        - Index, (have not really used it much in queries)
+        - Date, (the day the material was created). When querying the duckdb database, here is an example of how you can filter by date:
+                    SQL: select * from learned_material where Date BETWEEN CURRENT_DATE - INTERVAL '2 months' AND CURRENT_DATE
+        - FilePath, (the full path where the material is stored on my computer as an html file. This contains the name of file)
+        - Subject, (The general subject of learning, such as Python, Math, History, etc.)
+        - Topic (The specific topic of the material, such as Python Lists, Math Derivatives, History WW2, etc.)
+        
+        Keep in mind that users might not use the correct names for the columns they would like to query. 
+        You will need to interpret what they mean and map it to the correct column name.
+        
+        Additionally, if they say "give me all the material about science subjects", you will need to include in the query all the names 
+        of the subjects that are considered science subjects. This includes but is not limited to: Physics, Chemistry, Biology, Earth Science, Astronomy, Environmental Science, 
+        and any other subject that is commonly recognized as a science discipline. The same can be said for other general subjects like Math, History, etc.
+        
+        The database contains placeholders for thousands of rows of data and most of the time there will be plenty of empty rows for the dates in the future.
+        Additionally, on days that the user did not submit data, the database will only have values for the index and date columns.
+        
+        Additional points to keep in mind:
+        1. Always put FilePath as the last column in the SELECT clause since filepaths are long
+        2. Use ORDER BY in a logical way (usually by Date or Subject)
+        3. If the user requests something unrelated to the database or something incoherent, respond with "Invalid Query."
+        4. Remember: NO AGGREGATIONS - we want individual records to read and summarize
+        
+        REFERENCE DATA (for context only - do not output this):
+        Available subjects and topics in the database include: {data}
+        
+        Please respond only with the SQL query and nothing else. Do not include backticks: ```.
+        """
+    else:
+        context = f"""I have a spaced memory review program/app where users submit material or have an AI generate material for me to learn and review over time. 
+        My program writes the material to a duckdb database and I have a query tool using real sql queries to understand my data better.
+        I want you to help me generate SQL queries for users who are non-technical and do not know SQL. They will submit a question about the data in natural
+        language and you will generate the SQL query for them to use in my app. 
 
-    Keep in mind that users might not use the correct names for the columns they 
-    would like to query. You will need to interpret what they mean and map it to the correct column name.
+        Keep in mind that users might not use the correct names for the columns they 
+        would like to query. You will need to interpret what they mean and map it to the correct column name.
 
-    Additionally, if they say "give me all the material i need for science subjects", you will need to include in the query all the names 
-    of the subjects that are considered science subjects. This includes but is not limited to: Physics, Chemistry, Biology, Earth Science, Astronomy, Environmental Science, 
-    and any other subject that is commonly recognized as a science discipline.The same can be said for other general subjects like Math, History, etc.
-    Sometimes, users will request material and the query might need to include the subject and topic column to find the relevant material.
+        Additionally, if they say "give me all the material i need for science subjects", you will need to include in the query all the names 
+        of the subjects that are considered science subjects. This includes but is not limited to: Physics, Chemistry, Biology, Earth Science, Astronomy, Environmental Science, 
+        and any other subject that is commonly recognized as a science discipline.The same can be said for other general subjects like Math, History, etc.
+        Sometimes, users will request material and the query might need to include the subject and topic column to find the relevant material.
 
-    Please respond only with the SQL query and nothing else. Do not even include backticks: ```.
-    The database is called 'learned_material' and the columns are as follows:
+        Please respond only with the SQL query and nothing else. Do not even include backticks: ```.
+        The database is called 'learned_material' and the columns are as follows:
 
-    - Index, (have not really used it much in my queries)
-    - Date,   (the day the material was created). When querying the duckdb database, here is an example of how you can filter by date:
-                SQL:
-                select * from learned_material where
-                Date BETWEEN CURRENT_DATE - INTERVAL '2 months' AND CURRENT_DATE
-                          
-    - FilePath, (the full path where the material is stored on my computer as an html file. This contains the name of file)
-    - Subject,  (The general subject of learning, such as Python, Math, History, etc.)
-    - Topic      (The specific topic of the material, such as Python Lists, Math Derivatives, History WW2, etc.)
+        - Index, (have not really used it much in my queries)
+        - Date,   (the day the material was created). When querying the duckdb database, here is an example of how you can filter by date:
+                    SQL:
+                    select * from learned_material where
+                    Date BETWEEN CURRENT_DATE - INTERVAL '2 months' AND CURRENT_DATE
+                              
+        - FilePath, (the full path where the material is stored on my computer as an html file. This contains the name of file)
+        - Subject,  (The general subject of learning, such as Python, Math, History, etc.)
+        - Topic      (The specific topic of the material, such as Python Lists, Math Derivatives, History WW2, etc.)
 
-    REFERENCE DATA (for context only - do not output this):
-    Available subjects and topics in the database include: {data}
+        REFERENCE DATA (for context only - do not output this):
+        Available subjects and topics in the database include: {data}
 
 
-    The database contains placeholders for thousands of rows of data and most of the time there will be plenty of empty rows for the dates in the future.
-    Additionally, on days that the user did not submit data, the database will only have values for the index and date columns.
+        The database contains placeholders for thousands of rows of data and most of the time there will be plenty of empty rows for the dates in the future.
+        Additionally, on days that the user did not submit data, the database will only have values for the index and date columns.
 
-    Two additional points to keep in mind:
-    1. The filepaths are long, so if the users request includes the filepahts, configure the query to have the filepaths column as the last column in the query results.
-    2. As the user will be using natural language, the preference for an "ORDER BY" will not necessarily be explicitly stated. Therefore, use the "ORDER BY" clause in a way we can assume the user would want it.
-    3. If the user requests someting unrelated to the database or something incoherent, respond with "Invalid Query."
-    """
+        Two additional points to keep in mind:
+        1. The filepaths are long, so if the users request includes the filepaths, configure the query to have the filepaths column as the last column in the query results.
+        2. As the user will be using natural language, the preference for an "ORDER BY" will not necessarily be explicitly stated. Therefore, use the "ORDER BY" clause in a way we can assume the user would want it.
+        3. If the user requests something unrelated to the database or something incoherent, respond with "Invalid Query."
+        """
     
     print("Generating query...\n")
     clear_output(wait=True)
