@@ -55,7 +55,11 @@ def natural_language_to_query(natural_language, display_output=True, purpose="qu
         
         Additionally, if they say "give me all the material about science subjects", you will need to include in the query all the names 
         of the subjects that are considered science subjects. This includes but is not limited to: Physics, Chemistry, Biology, Earth Science, Astronomy, Environmental Science, 
-        and any other subject that is commonly recognized as a science discipline. The same can be said for other general subjects like Math, History, etc.
+        and any other subject that is commonly recognized as a science discipline. 
+        Another example; if the user wants all material for machine learning classification algorithms, don't simply filter for "machine learning" the subject and "classification" the topic.
+        Rather, include all relevant topics like "decision trees", "random forests", "support vector machines", "logistic regression", "k-nearest neighbors", etc.
+        The same can be said for other general subjects like Math, History, etc. As you should use your own knowledge of subject matter in additon,
+        to how a typical user would query the database.
         
         The database contains placeholders for thousands of rows of data and most of the time there will be plenty of empty rows for the dates in the future.
         Additionally, on days that the user did not submit data, the database will only have values for the index and date columns.
@@ -80,10 +84,13 @@ def natural_language_to_query(natural_language, display_output=True, purpose="qu
         Keep in mind that users might not use the correct names for the columns they 
         would like to query. You will need to interpret what they mean and map it to the correct column name.
 
-        Additionally, if they say "give me all the material i need for science subjects", you will need to include in the query all the names 
+        Additionally, if they say "give me all the material about science subjects", you will need to include in the query all the names 
         of the subjects that are considered science subjects. This includes but is not limited to: Physics, Chemistry, Biology, Earth Science, Astronomy, Environmental Science, 
-        and any other subject that is commonly recognized as a science discipline.The same can be said for other general subjects like Math, History, etc.
-        Sometimes, users will request material and the query might need to include the subject and topic column to find the relevant material.
+        and any other subject that is commonly recognized as a science discipline. 
+        Another example; if the user wants all material for machine learning classification algorithms, don't simply filter for "machine learning" the subject and "classification" the topic.
+        Rather, include all relevant topics like "decision trees", "random forests", "support vector machines", "logistic regression", "k-nearest neighbors", etc.
+        The same can be said for other general subjects like Math, History, etc. As you should use your own knowledge of subject matter in additon,
+        to how a typical user would query the database.
 
         Please respond only with the SQL query and nothing else. Do not even include backticks: ```.
         The database is called 'learned_material' and the columns are as follows:
