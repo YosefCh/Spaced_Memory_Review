@@ -1,12 +1,15 @@
 import duckdb
 import pandas as pd
 import sys
+import os
 from IPython.display import Markdown, HTML, display
 from datetime import datetime
 
-INPUT_SQL_PATH = 'sql_query.sql'
-OUTPUT_CSV_PATH = 'query_output.csv'
-CSV_SOURCE_PATH = 'C:/Users/Rebecca/OneDrive/Documents/Review/Data/learned_material.csv'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+INPUT_SQL_PATH = os.path.join(BASE_DIR, 'sql_query.sql')
+OUTPUT_CSV_PATH = os.path.join(BASE_DIR, 'query_output.csv')
+CSV_SOURCE_PATH = os.path.join(BASE_DIR, '../Data/learned_material.csv')
+SQL_ERROR_PATH = os.path.join(BASE_DIR, 'sql_error_message.txt')
 
 def main():
     # Read the SQL query
@@ -49,7 +52,7 @@ def main():
         result_df = con.execute(user_sql).fetchdf()
         
         # Clear any previous error messages on successful execution
-        with open('sql_error_message.txt', 'w') as f:
+        with open(SQL_ERROR_PATH, 'w') as f:
             f.write("")
         
         # Save result
@@ -57,7 +60,7 @@ def main():
         with open(OUTPUT_CSV_PATH, 'r') as f:
             print(f"Query output saved to {OUTPUT_CSV_PATH}:\n{f.read()}")
     except Exception as e:
-        with open('sql_error_message.txt', 'w') as f:
+        with open(SQL_ERROR_PATH, 'w') as f:
             f.write(f"Error occurred:\n{e}\n")
         sys.exit(1)  # Exit with error code
 

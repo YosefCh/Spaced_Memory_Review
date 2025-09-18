@@ -6,9 +6,11 @@ def natural_language_to_query(natural_language, display_output=True, purpose="qu
     from AI_class import OpenAIClient
     import query_runner
     import time
+    import os
     a = OpenAIClient()
     
-    
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    query_output_file = os.path.join(BASE_DIR, "query_output.csv")
     display(Markdown(f"**Your question:** {natural_language}"))
     print('Fetching context data from the database...\n')
     time.sleep(1)
@@ -16,7 +18,7 @@ def natural_language_to_query(natural_language, display_output=True, purpose="qu
     
     # Get distinct subjects and topics for context to feed the model but do not display it to the user 
     query_runner.run_query("select distinct subject, topic, Date FROM learned_material where subject is not null;", display_output=False)
-    with open('query_output.csv', 'r') as f:
+    with open(query_output_file, 'r') as f:
         data = f.read()
 
     if purpose == "summary":
