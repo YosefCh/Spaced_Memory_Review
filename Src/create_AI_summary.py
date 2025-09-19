@@ -38,4 +38,26 @@ class AISummaryTool:
         
         return material_content
     
-    
+    def generate_summary(self):
+        material_content = self.extract_material()
+        ai = OpenAIClient(system_role_content="You are an expert at summarizing educational material.")
+        prompt = f"""Please provide a concise summary of the following material:\n\n{material_content}\n\n:
+                     Summarize the key points and main ideas in a clear and organized manner.
+                     Each subject and topic should be clearly labeled in the summary. They should also be bolded.
+                     IMPORTANT: THE EXACT CONTENT SHOULD BE SUMMARIZED EVEN IF YOU THINK IT IS NOT NECESSARILY THE TYPICAL WAY OF PRESENTING
+                     THE INFORMATION.
+                     
+                     If there is no material for a specific subject or topic, please indicate that the content is 
+                     contained in the image portion of the file and cannot be summarized.
+                     
+                     Please do not provide any additional information beyond the summary. No follow-up questions or comments 
+                     and no introductory remarks. Just the summary.
+                  """
+
+        display(Markdown("**Summarizing your material...**"))
+        time.sleep(1)
+        clear_output(wait=True)
+        summary = ai.get_response(prompt)
+        display(Markdown(summary))
+        return summary
+
