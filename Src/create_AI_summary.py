@@ -60,4 +60,51 @@ class AISummaryTool:
         summary = ai.get_response(prompt)
         display(Markdown(summary))
         return summary
+    
+    def generate_quiz(self, difficulty="medium", interactive=False):
+     try:
+        content = self.extract_material()
+        # MUST ADD A CHECK TO SEE IF CONTENT IS EMPTY
+        if not content.strip():
+            display(Markdown("**No content available for quiz generation.**"))
+            return None
+
+        ai = OpenAIClient(system_role_content="You are an expert at creating quizzes based on educational material.")
+        prompt = f"""Based on the following content, create a quiz of {difficulty} difficulty level.
+                     Here is the content:\n\n{content}\n\n:
+                     Each question should have 4 multiple-choice answers, with one correct answer.
+                     Please format the quiz as follows:
+                     
+                     Question 1: [Question text (bolded)]
+                     
+                     A. [Option A]
+                     B. [Option B]
+                     C. [Option C]
+                     D. [Option D]
+                     
+                     Question 2: [Question text (bolded)]
+                     
+                     A. [Option A]
+                     B. [Option B]
+                     C. [Option C]
+                     D. [Option D]
+                        ...
+                     Correct Answers: [Correct option letter for each question in order]
+                     
+                     Repeat this format for all questions.
+                    
+                    IMPORTANT: THE QUESTIONS AND ANSWERS SHOULD BE BASED ON THE EXACT CONTENT PROVIDED, EVEN IF IT IS NOT NECESSARILY THE TYPICAL WAY OF PRESENTING 
+                    Additionally, please do not provide any additional information beyond the quiz. No follow-up questions or comments 
+                    and no introductory remarks. Just the quiz.
+                  """
+
+        display(Markdown("**Generating quiz...**"))
+        time.sleep(1)
+        clear_output(wait=True)
+        quiz = ai.get_response(prompt)
+        display(Markdown(quiz))
+        return quiz
+     except Exception as e:
+        # display(Markdown(f"**An error occurred while generating the quiz: {e}**"))
+        return None
 
