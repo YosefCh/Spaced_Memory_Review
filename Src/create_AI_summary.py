@@ -11,8 +11,11 @@ class AISummaryTool:
         self.query_output_file = os.path.join(self.BASE_DIR, "query_output.csv")
         
 
-    def find_files(self):
-        display(Markdown("**Please enter which material you want to summarize:**"))
+    def find_files(self, quiz=False):
+        if quiz:
+            display(Markdown("**Please enter which material you want to generate a quiz for:**"))
+        else:
+            display(Markdown("**Please enter which material you want to summarize:**"))
         question = input("Your question: ")
         time.sleep(1)
         natural_language_to_query(question, display_output=False, purpose="summary")
@@ -23,8 +26,9 @@ class AISummaryTool:
         topics = df['Topic'].dropna().tolist()
         return files, subjects, topics
 
-    def extract_material(self):
-        files, subjects, topics = self.find_files()
+    def extract_material(self, quiz=False):
+     try:
+        files, subjects, topics = self.find_files(quiz=quiz)
         material_content = ""
         for i in files:
             with open(i, 'r', encoding='utf-8') as file:
@@ -35,11 +39,16 @@ class AISummaryTool:
                 material_content += f"\n\n### Subject: {subjects[files.index(i)]}\n"
                 material_content += f"### Topic: {topics[files.index(i)]}\n"
                 material_content += section_content
-        
         return material_content
+     except Exception as e:
+        display(Markdown(f"**An error occurred while extracting material:\n{e}**"))
+        return "Error extracting material."
+
     
     def generate_summary(self):
         material_content = self.extract_material()
+        if material_content.strip() == "Error extracting material.":
+            return None
         ai = OpenAIClient(system_role_content="You are an expert at summarizing educational material.")
         prompt = f"""Please provide a concise summary of the following material:\n\n{material_content}\n\n:
                      Summarize the key points and main ideas in a clear and organized manner.
@@ -63,7 +72,7 @@ class AISummaryTool:
     
     def generate_quiz(self, difficulty="medium", interactive=False):
      try:
-        content = self.extract_material()
+        content = self.extract_material(quiz=True)
         # MUST ADD A CHECK TO SEE IF CONTENT IS EMPTY
         if not content.strip():
             display(Markdown("**No content available for quiz generation.**"))
@@ -105,6 +114,6 @@ class AISummaryTool:
         display(Markdown(quiz))
         return quiz
      except Exception as e:
-        # display(Markdown(f"**An error occurred while generating the quiz: {e}**"))
+        display(Markdown(f"**An error occurred while generating the quiz:\n{e}**"))
         return None
 
