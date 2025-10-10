@@ -355,73 +355,101 @@ class SpacedMemoryReview:
         # Return tuple containing subject, topic, and content for AI mode
         return (self.extracted_subject, self.user_topic, self.examine_user_subject)
         
-    def recommendation_content_with_ai(self):
+    def recommendation_content_with_ai(self, test=False):
         clear_output(wait=True)
+        if pd.isna(self.df['Subject'].iloc[0]):
+            return display(HTML("<h3 style='color:red'>No learning history found. Please add some learning material first.</h3>"))
+
         display(Markdown("generating content..."))
         
-        raw_all_topics = self.df['Subject'].dropna()  # Get unique topics from DataFrame
-        # Convert to lowercase for case-insensitive comparison and  remove extra space in case of double spaces
-        all_topics = [topic.lower().replace('  ',' ') for topic in raw_all_topics] 
-        # get all the unique topics ever used
-        overall_percentages = {}
-        ovreall_bucket = set(all_topics)  
+        # Get all non-null subjects
+        raw_all_topics = self.df['Subject'].dropna()
         
-        # Loop through each topic in the first bucket
-        for topic in ovreall_bucket:
-            # Get the percentage of times this topic was used
-            percentage = all_topics.count(topic) / len(all_topics)
-            overall_percentages[topic] = round(percentage, 2)  # Store the percentage rounded to 2 decimal places
+        # Check if we have fewer than 8 entries - use simple random selection as our formula below is only for 8 or more entries
+        if len(raw_all_topics) < 8:
+            import random
+            # Just pick a random subject from existing ones
+            chosen_subject = random.choice(raw_all_topics).lower().replace('  ',' ')
+        else:
+            # Use your existing complex recommendation algorithm
+            # Convert to lowercase for case-insensitive comparison and  remove extra space in case of double spaces
+            all_topics = [topic.lower().replace('  ',' ') for topic in raw_all_topics] 
+            # get all the unique topics ever used
+            overall_percentages = {}
+            ovreall_bucket = set(all_topics)  
+            
+            # Loop through each topic in the first bucket
+            for topic in ovreall_bucket:
+                # Get the percentage of times this topic was used
+                percentage = all_topics.count(topic) / len(all_topics)
+                overall_percentages[topic] = round(percentage, 2)  # Store the percentage rounded to 2 decimal places
+            
+            
+            # next bucket is the past week
+            last_learned_day = (datetime.now() - pd.to_datetime(self.df['Date'].iloc[0])).days
+            raw_past_week = self.df.loc[last_learned_day - 7 : last_learned_day - 1, 'Subject']
+            # use isinstance(str) to remove NaN values and convert to lowercase
+            past_week_bucket = [x.lower().replace('  ',' ') for x in raw_past_week if isinstance(x, str)]
+            past_week_percentages = {}
+            for topic in set(past_week_bucket):
+                percentage = past_week_bucket.count(topic) / len(past_week_bucket)
+                past_week_percentages[topic] = round(percentage, 2)  # Store the percentage rounded to 2 decimal places
+            
+            # next bucket is the last third of the overall learning history
+            raw_last_third = self.df.loc[last_learned_day - (last_learned_day // 3): last_learned_day, 'Subject']
+            last_third_bucket = [x.lower().replace('  ',' ') for x in raw_last_third if isinstance(x, str)]
+            last_third_percentages = {}
+            for topic in set(last_third_bucket):
+                percentage = last_third_bucket.count(topic) / len(last_third_bucket)
+                last_third_percentages[topic] = round(percentage, 2)  # Store the percentage rounded to 2 decimal places
+            
+            bucket_percentages = [overall_percentages, last_third_percentages, past_week_percentages]
+            # these are the weights for each bucket. They don't strictly have to add up to 1
+            # as we are simply weighing the importance of each bucket in the final recommendation.
+            weights = [0.7, 0.2, 0.2]  # Weights for each bucket
+
+            final_scores = {}
+            # use the zip funciton to map the bucket percentages to the weights
+            # outer loop iterates over each bucket and its corresponding weight
+            # inner loop iterates over each topic and its percentage in the bucket
+            for bucket, weight in zip(bucket_percentages, weights):
+                for topic, pct in bucket.items():
+                    # get each topic value and add the percentage multiplied by the weight to the final score
+                    final_scores[topic] = final_scores.get(topic, 0) + (pct * weight)
+            
+            # Sort topics by final score in descending order
+            sorted_topics = sorted(final_scores.items(), key=lambda x: x[1], reverse=True)
+            
+            # Get the top 3 topics. (this will get first three items in the dict even if there are idential
+            # topics with the same score, so it is not strictly top 3. This adds a bit of randomness to the selection.)
+            
+            import random
+            
+            top_six = [x[0] for x in sorted_topics[:4]]
+            random_subject = random.randint(4, round((len(sorted_topics)-1)/2))
+            second_random_subject = random.randint(round((len(sorted_topics)-1)/2), len(sorted_topics)-1)
+            top_six.append(sorted_topics[random_subject][0])
+            top_six.append(sorted_topics[second_random_subject][0])
+           
+            initial_element = random.randint(0, len(top_six)-1)
+            weight = random.uniform(.6, 1.4)
+            final_element = round(initial_element * weight)
+            if final_element <= 0:
+                final_element = 1
+            elif final_element > len(top_six):
+                final_element = len(top_six)
+            
+            chosen_subject = top_six[final_element - 1]
         
-        
-        # next bucket is the past week
-        last_learned_day = (datetime.now() - pd.to_datetime(self.df['Date'].iloc[0])).days
-        raw_past_week = self.df.loc[last_learned_day - 7 : last_learned_day - 1, 'Subject']
-        # use isinstance(str) to remove NaN values and convert to lowercase
-        past_week_bucket = [x.lower().replace('  ',' ') for x in raw_past_week if isinstance(x, str)]
-        past_week_percentages = {}
-        for topic in set(past_week_bucket):
-            percentage = past_week_bucket.count(topic) / len(past_week_bucket)
-            past_week_percentages[topic] = round(percentage, 2)  # Store the percentage rounded to 2 decimal places
-        
-        # next bucket is the last third of the overall learning history
-        raw_last_third = self.df.loc[last_learned_day - (last_learned_day // 3): last_learned_day, 'Subject']
-        last_third_bucket = [x.lower().replace('  ',' ') for x in raw_last_third if isinstance(x, str)]
-        last_third_percentages = {}
-        for topic in set(last_third_bucket):
-            percentage = last_third_bucket.count(topic) / len(last_third_bucket)
-            last_third_percentages[topic] = round(percentage, 2)  # Store the percentage rounded to 2 decimal places
-        
-        bucket_percentages = [overall_percentages, last_third_percentages, past_week_percentages]
-        # these are the weights for each bucket. They don't strictly have to add up to 1
-        # as we are simply weighing the importance of each bucket in the final recommendation.
-        weights = [0.2, 0.3, 0.5]  # Weights for each bucket
-        
-        
-        final_scores = {}
-        # use the zip funciton to map the bucket percentages to the weights
-        # outer loop iterates over each bucket and its corresponding weight
-        # inner loop iterates over each topic and its percentage in the bucket
-        for bucket, weight in zip(bucket_percentages, weights):
-            for topic, pct in bucket.items():
-                # get each topic value and add the percentage multiplied by the weight to the final score
-                final_scores[topic] = final_scores.get(topic, 0) + (pct * weight)
-        
-        # Sort topics by final score in descending order
-        sorted_topics = sorted(final_scores.items(), key=lambda x: x[1], reverse=True)
-        
-        # Get the top 3 topics. (this will get first three items in the dict even if there are idential
-        # topics with the same score, so it is not strictly top 3. This adds a bit of randomness to the selection.)
-        top_three = [x[0] +': ' +  str(round(x[1], 2)) for x in sorted_topics[:3]]
-        # print(top_three)
-        
+        # Common code for both paths - get learned subjects and create prompt
         self.learned_subjects = [x for x in (self.df['Subject'] + ' - ' + self.df['Topic']).tolist() if type(x) != float]
         
         # get the previously learned subjects from the DataFrame to inform the AI about what has been learned
         prompt = f""" You are a recommendation system. Based on the user's past learning history 
-                      (given below), suggest a new subject and topic the user has not yet studied.
+                      (given below), suggest a new topic the user has not yet studied.
                       
                     - Learned subjects and topics (format: "Subject - Topic"): {self.learned_subjects}
-                    - Top 3 most studied topics: {top_three}
+                    - Select a topic for the following subject: {chosen_subject}
 
                     Return a **Python list** with a suggested subject and topic, each as a one- or two-word string. 
                     Ensure the subject-topic pair is not already in the list of learned subjects. 
@@ -441,7 +469,6 @@ class SpacedMemoryReview:
         # must turn response to a list as the AI will return a string representation of a list
         ai_recommendation = recommender.get_response(prompt).split(',')
         
-        # Parse the AI recommendation to extract subject and topic
         self.rec_subject = ai_recommendation[0].strip().strip('[]"\'')
         self.rec_topic = ai_recommendation[1].strip().strip('[]"\'')
         # Removed print statement to avoid unwanted output
