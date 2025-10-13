@@ -77,42 +77,77 @@ class AISummaryTool:
         if not content.strip():
             display(Markdown("**No content available for quiz generation.**"))
             return None
-
-        ai = OpenAIClient(system_role_content="You are an expert at creating quizzes based on educational material.")
-        prompt = f"""Based on the following content, create a quiz of {difficulty} difficulty level.
-                     Here is the content:\n\n{content}\n\n:
-                     Each question should have 4 multiple-choice answers, with one correct answer.
-                     Please format the quiz as follows:
-                     
-                     Question 1: [Question text (bolded)]
-                     
-                     A. [Option A]
-                     B. [Option B]
-                     C. [Option C]
-                     D. [Option D]
-                     
-                     Question 2: [Question text (bolded)]
-                     
-                     A. [Option A]
-                     B. [Option B]
-                     C. [Option C]
-                     D. [Option D]
+        if not interactive:
+            ai = OpenAIClient(system_role_content="You are an expert at creating quizzes based on educational material.")
+            prompt = f"""Based on the following content, create a quiz of {difficulty} difficulty level.
+                        Here is the content:\n\n{content}\n\n
+                        
+                        Each question should have 4 multiple-choice answers, with one correct answer.
+                        Please format the quiz exactly as follows:
+                        
+                        **Question 1: [Question text]**
+                        
+                        A. [Option A]
+                        B. [Option B]
+                        C. [Option C]
+                        D. [Option D]
+                        
+                        
+                        **Question 2: [Question text]**
+                        
+                        A. [Option A]
+                        B. [Option B]
+                        C. [Option C]
+                        D. [Option D]
+                        
+                        
+                        
+                        **Question 3: [Question text]**
+                        
+                        A. [Option A]
+                        B. [Option B]
+                        C. [Option C]
+                        D. [Option D]
+                        
                         ...
-                     Correct Answers: [Correct option letter for each question in order]
-                     
-                     Repeat this format for all questions.
-                    
-                    IMPORTANT: THE QUESTIONS AND ANSWERS SHOULD BE BASED ON THE EXACT CONTENT PROVIDED, EVEN IF IT IS NOT NECESSARILY THE TYPICAL WAY OF PRESENTING 
-                    Additionally, please do not provide any additional information beyond the quiz. No follow-up questions or comments 
-                    and no introductory remarks. Just the quiz.
-                  """
+                        
+                        **Correct Answers:** [List answers like: 1-A, 2-B, etc.]
+                        
+                        IMPORTANT: THE QUESTIONS AND ANSWERS SHOULD BE BASED ON THE EXACT CONTENT PROVIDED.
+                        Do not provide any additional information beyond the quiz. No follow-up questions, comments, or introductory remarks. Just the quiz in the exact format shown above.
+                    """
 
-        display(Markdown("**Generating quiz...**"))
-        time.sleep(1)
-        clear_output(wait=True)
-        quiz = ai.get_response(prompt)
-        display(Markdown(quiz))
-        return quiz
+            display(Markdown("**Generating quiz...**"))
+            time.sleep(1)
+            clear_output(wait=True)
+            quiz = ai.get_response(prompt)
+            display(Markdown(quiz))
+            return quiz
+        else:
+            ai = OpenAIClient(system_role_content="You are an expert at creating quizzes based on educational material.")
+            prompt = f"""Based on the following content, create a quiz of {difficulty} difficulty level.
+                        Here is the content:\n\n{content}\n\n
+                        
+                        Each question should have 4 multiple-choice answers, with one correct answer.
+                        Please format the quiz exactly as follows:
+                        
+                        The quiz should be interactive, meaning after each question is presented, the user should be prompted to select an answer before moving on to the next question.
+                        Here is the format for each question which should be in Markdown so that it can be displayed properly in a Jupyter notebook:
+
+                        **Question 1: [Question text]**
+                        
+                        A. [Option A]
+                        B. [Option B]
+                        C. [Option C]
+                        D. [Option D]
+                        
+                        The questions should be stored in a Python list format so they can be presented one at a time (while still maintaining the Markdown formatting).
+                        
+                        The answers should also be stored in a Python list format as a one letter answer corresponding to the correct option (A, B, C, or D).
+                        
+                        IMPORTANT: THE QUESTIONS AND ANSWERS SHOULD BE BASED ON THE EXACT CONTENT PROVIDED.
+                        Do not provide any additional information beyond the quiz. No follow-up questions, comments, or introductory remarks. Just the quiz in the exact format shown above.
+                    """
      except Exception as e:
         display(Markdown(f"**An error occurred while generating the quiz:\n{e}**"))
         return None
