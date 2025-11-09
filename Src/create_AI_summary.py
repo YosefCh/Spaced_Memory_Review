@@ -24,6 +24,8 @@ class AISummaryTool:
         files = df['FilePath'].dropna().tolist()
         subjects = df['Subject'].dropna().tolist()
         topics = df['Topic'].dropna().tolist()
+        # get length of files to use later to tell program how many questions to generate
+        self.num_files = len(files)
         return files, subjects, topics
 
     def extract_material(self, quiz=False):
@@ -36,6 +38,11 @@ class AISummaryTool:
                 section_start = content.find('<div id="text">')
                 section_end = content.find('</div><br>', section_start)
                 section_content = content[section_start:section_end]
+
+                # extra check to ensure that the base 64 images are removed
+                base64_pos = section_content.find('png;base64')
+                if base64_pos != -1:  # Only truncate if "base64" is found
+                   section_content = section_content[:base64_pos]
                 material_content += f"\n\n### Subject: {subjects[files.index(i)]}\n"
                 material_content += f"### Topic: {topics[files.index(i)]}\n"
                 material_content += section_content
@@ -69,7 +76,7 @@ class AISummaryTool:
         summary = ai.get_response(prompt)
         display(Markdown(summary))
         return summary
-    
+
     def generate_quiz(self, difficulty="medium", interactive=False):
      try:
         content = self.extract_material(quiz=True)
@@ -125,29 +132,79 @@ class AISummaryTool:
             return quiz
         else:
             ai = OpenAIClient(system_role_content="You are an expert at creating quizzes based on educational material.")
+            quiz_length = self.num_files * 2  # e.g., 2 questions per file
+            print(quiz_length)
             prompt = f"""Based on the following content, create a quiz of {difficulty} difficulty level.
                         Here is the content:\n\n{content}\n\n
                         
-                        Each question should have 4 multiple-choice answers, with one correct answer.
-                        Please format the quiz exactly as follows:
+                        QUIZ LENGTH:
+                        The quiz should contain exactly {quiz_length} questions.
                         
-                        The quiz should be interactive, meaning after each question is presented, the user should be prompted to select an answer before moving on to the next question.
-                        Here is the format for each question which should be in Markdown so that it can be displayed properly in a Jupyter notebook:
+                        Return the response as a single string that I can split using triple pipes (|||) as a separator.
 
+                        CRITICAL FORMATTING REQUIREMENTS:
+                        - Use TRIPLE PIPES (|||) after EVERY element EXCEPT the very last one
+                        - First {quiz_length} elements: formatted questions with options
+                        - Last {quiz_length} elements: correct answers (just the letter: A, B, C, or D)
+
+                        The exact format should be:
                         **Question 1: [Question text]**
-                        
+
                         A. [Option A]
                         B. [Option B]
                         C. [Option C]
-                        D. [Option D]
-                        
-                        The questions should be stored in a Python list format so they can be presented one at a time (while still maintaining the Markdown formatting).
-                        
-                        The answers should also be stored in a Python list format as a one letter answer corresponding to the correct option (A, B, C, or D).
+                        D. [Option D]|||
+
+
+                        **Question 2: [Question text]**
+
+                        A. [Option A]
+                        B. [Option B]
+                        C. [Option C]
+                        D. [Option D]|||
+
+
+                        **Question 3: [Question text]**
+
+                        A. [Option A]
+                        B. [Option B]
+                        C. [Option C]
+                        D. [Option D]|||A|||B|||C
+
+                        etc..
+
+                        Return ONLY the formatted string above with triple pipes as separators. NO extra text, explanations, or formatting.
                         
                         IMPORTANT: THE QUESTIONS AND ANSWERS SHOULD BE BASED ON THE EXACT CONTENT PROVIDED.
-                        Do not provide any additional information beyond the quiz. No follow-up questions, comments, or introductory remarks. Just the quiz in the exact format shown above.
+                        Return only the single list above, nothing else.
                     """
+                    
+            display(Markdown("**Generating quiz...**"))
+            time.sleep(1)
+            clear_output(wait=True)
+            quiz = ai.get_response(prompt)
+            
+            data = quiz.split('|||')
+            questions = data[:len(data)//2]
+            answers = data[len(data)//2:]
+            score = 0
+            wrong_answers = []
+            for i in range(len(questions)):
+                display(Markdown(questions[i]))
+                user_answer = input("Your answer (A, B, C, or D): ").strip().upper()
+                correct_answer = answers[i].strip().upper()
+                clear_output(wait=True)
+                if user_answer == correct_answer:
+                    score += 1
+                else:
+                    wrong_answers.append((questions[i], correct_answer))
+            display(Markdown(f" # **Your Score: {score / len(questions) * 100:.0f}%**"))
+            if score / len(questions) * 100 < 100:
+                display(Markdown("---"))  # Horizontal line separator
+                display(Markdown(" ## **Please review the correct answers for the questions you answered incorrectly:**"))
+                for error in wrong_answers:
+                    display(Markdown(f"{error[0]}\n\n**Correct Answer: {error[1]}**"))
+
      except Exception as e:
         display(Markdown(f"**An error occurred while generating the quiz:\n{e}**"))
         return None
