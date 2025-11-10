@@ -12,11 +12,12 @@ class AISummaryTool:
         
 
     def find_files(self, quiz=False):
+     try:
         if quiz:
             display(Markdown("**Please enter which material you want to generate a quiz for:**"))
         else:
             display(Markdown("**Please enter which material you want to summarize:**"))
-        question = input("Your question: ")
+        question = input("You entered: ")
         time.sleep(1)
         natural_language_to_query(question, display_output=False, purpose="summary")
         
@@ -27,6 +28,9 @@ class AISummaryTool:
         # get length of files to use later to tell program how many questions to generate
         self.num_files = len(files)
         return files, subjects, topics
+     except Exception as e:
+         display(Markdown(f"**An error occurred while finding files:\n{e}**"))
+         return [], [], []
 
     def extract_material(self, quiz=False):
      try:
