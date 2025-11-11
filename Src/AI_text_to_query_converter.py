@@ -11,7 +11,7 @@ def natural_language_to_query(natural_language, display_output=True, purpose="qu
     
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     query_output_file = os.path.join(BASE_DIR, "query_output.csv")
-    display(Markdown(f"**Your question:** {natural_language}"))
+    display(Markdown(f"**Your entered:** {natural_language}"))
     print('Fetching context data from the database...\n')
     time.sleep(1)
     clear_output(wait=True)
