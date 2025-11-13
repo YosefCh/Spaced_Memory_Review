@@ -1,12 +1,16 @@
+
+# AI_text_to_query_converter.py
 def natural_language_to_query(natural_language, display_output=True, purpose="query"):
     
-    # necessary if the output query is to be displayed to the user
-    # from IPython.display import Markdown, display
+    # purpose param is necessary if the output query is to be displayed to the user
+
     from IPython.display import display, clear_output, Markdown
     from AI_class import OpenAIClient
     import query_runner
     import time
     import os
+    
+    
     a = OpenAIClient()
     
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
