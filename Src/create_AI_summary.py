@@ -17,7 +17,8 @@ class AISummaryTool:
             display(Markdown("**Please enter which material you want to generate a quiz for:**"))
         else:
             display(Markdown("**Please enter which material you want to summarize:**"))
-        question = input("You entered: ")
+        question = input("Submit Material here: ")
+        # display(Markdown(f"Your Entered: __{question}__"))
         time.sleep(1)
         natural_language_to_query(question, display_output=False, purpose="summary")
         
@@ -88,10 +89,17 @@ class AISummaryTool:
         if not content.strip():
             display(Markdown("**No content available for quiz generation.**"))
             return None
+        
+        quiz_length = self.num_files * 2  # e.g., 2 questions per file
+        
+        
         if not interactive:
             ai = OpenAIClient(system_role_content="You are an expert at creating quizzes based on educational material.")
             prompt = f"""Based on the following content, create a quiz of {difficulty} difficulty level.
                         Here is the content:\n\n{content}\n\n
+                        
+                        QUIZ LENGTH:
+                        The quiz should contain exactly {quiz_length} questions.
                         
                         Each question should have 4 multiple-choice answers, with one correct answer.
                         Please format the quiz exactly as follows:
@@ -137,7 +145,6 @@ class AISummaryTool:
         else:
             ai = OpenAIClient(system_role_content="You are an expert at creating quizzes based on educational material.")
             quiz_length = self.num_files * 2  # e.g., 2 questions per file
-            print(quiz_length)
             prompt = f"""Based on the following content, create a quiz of {difficulty} difficulty level.
                         Here is the content:\n\n{content}\n\n
                         
@@ -213,3 +220,26 @@ class AISummaryTool:
         display(Markdown(f"**An error occurred while generating the quiz:\n{e}**"))
         return None
 
+
+    def quiz_level(self):
+        display(Markdown("__Choose the number corresponding the level of difficulty for your quiz__"))
+        display(Markdown("1.  beginner"))
+        display(Markdown("2.  intermediate"))
+        display(Markdown("3.  advanced"))
+        choice = input("Select quiz difficulty (beginner, intermediate, advanced): ")
+        attempts = 0
+        while True: 
+            if choice in ['1', '2', '3']:
+                level_map = {'1': 'beginner', '2': 'intermediate', '3': 'advanced'}
+                level = level_map[choice]
+                # display(Markdown(f"**You have selected '{level}' difficulty for your quiz.**"))
+                time.sleep(1)
+                break
+            else:
+                choice = input("Invalid choice. Please select a number from 1 to 3: ")
+            attempts += 1
+            if attempts >= 3:
+                print("Too many invalid attempts. Defaulting to 'medium' difficulty.")
+                level = "medium"
+                break
+        return level
