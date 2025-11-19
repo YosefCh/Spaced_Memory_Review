@@ -1,3 +1,4 @@
+from yaml import Mark
 from AI_text_to_query_converter import natural_language_to_query
 from AI_class import OpenAIClient
 from IPython.display import display, Markdown, clear_output
@@ -82,7 +83,7 @@ class AISummaryTool:
         display(Markdown(summary))
         return summary
 
-    def generate_quiz(self, difficulty="medium", interactive=False):
+    def generate_quiz(self, difficulty="intermediate", interactive=False):
      try:
         content = self.extract_material(quiz=True)
         # MUST ADD A CHECK TO SEE IF CONTENT IS EMPTY
@@ -91,11 +92,14 @@ class AISummaryTool:
             return None
         
         quiz_length = self.num_files * 2  # e.g., 2 questions per file
-        
+
+        # Display quiz generation message
+        # The difficulty parameter is passed from the quiz_level method in the summary notebook
+        display(Markdown(f"**Generating {difficulty} level quiz with {quiz_length} questions...**"))
         
         if not interactive:
             ai = OpenAIClient(system_role_content="You are an expert at creating quizzes based on educational material.")
-            prompt = f"""Based on the following content, create a quiz of {difficulty} difficulty level.
+            prompt = f"""Based on the following content, create a quiz of {difficulty} level difficulty.
                         Here is the content:\n\n{content}\n\n
                         
                         QUIZ LENGTH:
@@ -136,8 +140,7 @@ class AISummaryTool:
                         Do not provide any additional information beyond the quiz. No follow-up questions, comments, or introductory remarks. Just the quiz in the exact format shown above.
                     """
 
-            display(Markdown("**Generating quiz...**"))
-            time.sleep(1)
+            time.sleep(1.8)
             clear_output(wait=True)
             quiz = ai.get_response(prompt)
             display(Markdown(quiz))
@@ -189,9 +192,8 @@ class AISummaryTool:
                         IMPORTANT: THE QUESTIONS AND ANSWERS SHOULD BE BASED ON THE EXACT CONTENT PROVIDED.
                         Return only the single list above, nothing else.
                     """
-                    
-            display(Markdown("**Generating quiz...**"))
-            time.sleep(1)
+
+            time.sleep(1.8)
             clear_output(wait=True)
             quiz = ai.get_response(prompt)
             
@@ -222,6 +224,9 @@ class AISummaryTool:
 
 
     def quiz_level(self):
+        """
+        This method is called in the summary notebook to feed the difficulty level into the quiz generation function.
+        """
         display(Markdown("__Choose the number corresponding the level of difficulty for your quiz__"))
         display(Markdown("1.  beginner"))
         display(Markdown("2.  intermediate"))
