@@ -1,3 +1,4 @@
+
 # enter you file path to the file that contains your Api key or you can use an environment variable
 with open('C:/Users/Rebecca/OneDrive/Documents/Python AI/LLM (AI) Browser History Analyzer/Api_key.txt', 'r') as f:
     # set a constant variable to the key
@@ -24,10 +25,10 @@ class OpenAIClient:
  
     def __init__(self, api_key=API_KEY, 
                  model_name="gpt-5-chat-latest", 
-                 max_tokens=4096, 
+                 # max_tokens=4096, 
                  system_role_content="You are a helpful assistant.", 
-                 temperature=.5, 
-                 top_p=.8):
+                 temperature=.4, 
+                 top_p=.7):
         """
         Initializes the OpenAIClient with the given parameters.
 
@@ -43,7 +44,7 @@ class OpenAIClient:
         openai.api_key = api_key
         self.client = openai
         self.model_name = model_name
-        self.max_tokens = max_tokens
+        # self.max_tokens = max_tokens
         self.system_role_content = system_role_content
         self.temperature = temperature
         self.top_p = top_p
@@ -65,13 +66,13 @@ class OpenAIClient:
                     {"role": "system", "content": self.system_role_content},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=self.max_tokens,
+                # max_tokens=self.max_tokens,
                 temperature=self.temperature,
                 top_p=self.top_p
             )
             return response.choices[0].message.content.strip()
         except Exception as e:
-            print(e)
+            return f"An error occurred: {str(e)}"
             
 
 # Class for interacting with the OpenAI models that are ideal for more complex reasoning tasks
@@ -93,8 +94,9 @@ class Reasoning_OpenAIClient:
     """
  
     def __init__(self, api_key=API_KEY, 
-                 model_name="o4-mini", 
+                 model_name="gpt-5.1", 
                  reasoning = "medium",
+                 verbosity = "medium",
                  system_role_content="You are a helpful assistant." 
                  ):
         """
@@ -116,6 +118,7 @@ class Reasoning_OpenAIClient:
         self.client = openai
         self.model_name = model_name
         self.reasoning = reasoning
+        self.verbosity = verbosity
         self.system_role_content = system_role_content
 
     def get_response(self, prompt):
@@ -146,11 +149,13 @@ class Reasoning_OpenAIClient:
             )
             return response.choices[0].message.content.strip()
         except Exception as e:
-            print(e)
+            return f"An error occurred: {str(e)}"
+        
+# IMPORTANT:
+# Docs for the new Gpt-5.1 model can be found here with all the available parameters:
+# https://platform.openai.com/docs/guides/latest-model
             
             
-# if __name__ == '__main__':
-    
-    
-    
-    
+if __name__ == '__main__':
+    b = Reasoning_OpenAIClient(model_name='gpt-5.1', reasoning='high', verbosity='high')
+    print(b.get_response("Do intuitive feelings in humans attest to their truthfulness? Provide a detailed analysis."))

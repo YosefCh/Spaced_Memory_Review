@@ -1,4 +1,3 @@
-from yaml import Mark
 from AI_text_to_query_converter import natural_language_to_query
 from AI_class import OpenAIClient
 from IPython.display import display, Markdown, clear_output
@@ -79,9 +78,11 @@ class AISummaryTool:
         display(Markdown("**Summarizing your material...**"))
         time.sleep(1)
         clear_output(wait=True)
+        
         summary = ai.get_response(prompt)
         display(Markdown(summary))
         return summary
+        
 
     def generate_quiz(self, difficulty="intermediate", interactive=False):
      try:
