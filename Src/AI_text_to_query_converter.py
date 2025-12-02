@@ -5,13 +5,14 @@ def natural_language_to_query(natural_language, display_output=True, purpose="qu
     # purpose param is necessary if the output query is to be displayed to the user
 
     from IPython.display import display, clear_output, Markdown
-    from AI_class import OpenAIClient
+    from AI_class import OpenAIClient, Reasoning_OpenAIClient
     import query_runner
     import time
     import os
     
     
-    a = OpenAIClient()
+    ai = Reasoning_OpenAIClient()
+    backup_ai = OpenAIClient(model_name="gpt-4.1-mini")
     
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     query_output_file = os.path.join(BASE_DIR, "query_output.csv")
@@ -26,7 +27,7 @@ def natural_language_to_query(natural_language, display_output=True, purpose="qu
         data = f.read()
 
     if purpose == "summary":
-        context = f"""I have a spaced memory review program/app where users submit material or have an AI generate material for me to learn and review over time. 
+        context = f"""I have a spaced memory review program/app where users submit material or have an AI generate material for them to learn and review over time. 
         My program writes the material to a duckdb database and I have a query tool using real sql queries to understand my data better.
         
         IMPORTANT: This request is for CONTENT SUMMARIZATION purposes. The user wants to identify individual files/records to read and summarize their content.
@@ -82,7 +83,7 @@ def natural_language_to_query(natural_language, display_output=True, purpose="qu
         Please respond only with the SQL query and nothing else. Do not include backticks: ```.
         """
     else:
-        context = f"""I have a spaced memory review program/app where users submit material or have an AI generate material for me to learn and review over time. 
+        context = f"""I have a spaced memory review program/app where users submit material or have an AI generate material for them to learn and review over time. 
         My program writes the material to a duckdb database and I have a query tool using real sql queries to understand my data better.
         I want you to help me generate SQL queries for users who are non-technical and do not know SQL. They will submit a question about the data in natural
         language and you will generate the SQL query for them to use in my app. 
@@ -126,11 +127,16 @@ def natural_language_to_query(natural_language, display_output=True, purpose="qu
     
     print("Generating query...\n")
     clear_output(wait=True)
-    z = a.get_response(f"""Given this context: {context}
+    z = ai.get_response(f"""Given this context: {context}
                                     Here is the natural language question from the user:
                                     {natural_language}
                                     """)
-
+    
+    if z.startswith("An error occurred"):
+        z = backup_ai.get_response(f"""Given this context: {context}
+                                    Here is the natural language question from the user:
+                                    {natural_language}
+                                    """)
     # optional to see the query generated
     #display(Markdown(f"__Your question:__ {natural_language}"))
     if z == "Invalid Query.":
