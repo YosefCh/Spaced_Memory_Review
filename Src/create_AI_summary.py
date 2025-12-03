@@ -1,9 +1,10 @@
 from AI_text_to_query_converter import natural_language_to_query
-from AI_class import OpenAIClient
+from AI_class import OpenAIClient, Reasoning_OpenAIClient
 from IPython.display import display, Markdown, clear_output
 import time
 import pandas as pd
 import os
+import math
 
 class AISummaryTool:
     def __init__(self):
@@ -61,7 +62,9 @@ class AISummaryTool:
         material_content = self.extract_material()
         if material_content.strip() == "Error extracting material.":
             return None
-        ai = OpenAIClient(system_role_content="You are an expert at summarizing educational material.")
+        
+        # Initialize the AI client to gpt 5.1 and  with high reasoning and verbosity for better summaries
+        ai = Reasoning_OpenAIClient(model_name="gpt-5.1", reasoning="high", verbosity="high", system_role_content="You are an expert at summarizing educational material.")
         prompt = f"""Please provide a concise summary of the following material:\n\n{material_content}\n\n:
                      Summarize the key points and main ideas in a clear and organized manner.
                      Each subject and topic should be clearly labeled in the summary. They should also be bolded.
@@ -80,6 +83,11 @@ class AISummaryTool:
         clear_output(wait=True)
         
         summary = ai.get_response(prompt)
+        
+        # if token limit is reached fallback to standard OpenAIClient
+        if summary.startswith("An error occurred"):
+            backup_ai = OpenAIClient(model_name="gpt-4.1-mini", system_role_content="You are an expert at summarizing educational material.")
+            summary = backup_ai.get_response(prompt)
         display(Markdown(summary))
         return summary
         
@@ -92,14 +100,19 @@ class AISummaryTool:
             display(Markdown("**No content available for quiz generation.**"))
             return None
         
-        quiz_length = self.num_files * 2  # e.g., 2 questions per file
+        if difficulty == "advanced":
+            quiz_length = self.num_files * 2  # e.g., 2 questions per file
+        elif difficulty == "intermediate":
+            quiz_length = math.ceil(self.num_files * 1.5)  # approximately 1.5 questions per file
+        elif difficulty == "beginner":
+            quiz_length = self.num_files * 1  
 
         # Display quiz generation message
         # The difficulty parameter is passed from the quiz_level method in the summary notebook
         display(Markdown(f"**Generating {difficulty} level quiz with {quiz_length} questions...**"))
         
         if not interactive:
-            ai = OpenAIClient(system_role_content="You are an expert at creating quizzes based on educational material.")
+            ai = Reasoning_OpenAIClient(model_name="gpt-5.1", reasoning="high", verbosity="high", system_role_content="You are an expert at creating quizzes based on educational material.")
             prompt = f"""Based on the following content, create a quiz of {difficulty} level difficulty.
                         Here is the content:\n\n{content}\n\n
                         
@@ -144,11 +157,23 @@ class AISummaryTool:
             time.sleep(1.8)
             clear_output(wait=True)
             quiz = ai.get_response(prompt)
+            
+            # if token limit is reached fallback to standard OpenAIClient
+            if quiz.startswith("An error occurred"):
+                backup_ai = OpenAIClient(model_name="gpt-4.1-mini", system_role_content="You are an expert at creating quizzes based on educational material.")
+                quiz = backup_ai.get_response(prompt)
             display(Markdown(quiz))
             return quiz
         else:
-            ai = OpenAIClient(system_role_content="You are an expert at creating quizzes based on educational material.")
-            quiz_length = self.num_files * 2  # e.g., 2 questions per file
+            ai = Reasoning_OpenAIClient(model_name="gpt-5.1", reasoning="high", verbosity="high", system_role_content="You are an expert at creating quizzes based on educational material.")
+            
+            if difficulty == "advanced":
+                quiz_length = self.num_files * 2  # e.g., 2 questions per file
+            elif difficulty == "intermediate":
+                quiz_length = math.ceil(self.num_files * 1.5)  # approximately 1.5 questions per file
+            elif difficulty == "beginner":
+               quiz_length = self.num_files * 1  
+            
             prompt = f"""Based on the following content, create a quiz of {difficulty} difficulty level.
                         Here is the content:\n\n{content}\n\n
                         
@@ -197,6 +222,11 @@ class AISummaryTool:
             time.sleep(1.8)
             clear_output(wait=True)
             quiz = ai.get_response(prompt)
+            
+            # if token limit is reached fallback to standard OpenAIClient
+            if quiz.startswith("An error occurred"):
+                backup_ai = OpenAIClient(model_name="gpt-4.1-mini", system_role_content="You are an expert at creating quizzes based on educational material.")
+                quiz = backup_ai.get_response(prompt)
             
             data = quiz.split('|||')
             questions = data[:len(data)//2]

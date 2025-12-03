@@ -28,7 +28,9 @@ def natural_language_to_query(natural_language, display_output=True, purpose="qu
 
     if purpose == "summary":
         context = f"""I have a spaced memory review program/app where users submit material or have an AI generate material for them to learn and review over time. 
-        My program writes the material to a duckdb database and I have a query tool using real sql queries to understand my data better.
+        My program writes the material to a duckdb database and has a query tool using real sql queries to help better understand the data.
+        I want you to help me generate SQL queries for users who are non-technical and do not know SQL. They will submit a question about the data in natural
+        language and you will generate the SQL query for them to use in my app.
         
         IMPORTANT: This request is for CONTENT SUMMARIZATION purposes. The user wants to identify individual files/records to read and summarize their content.
         
@@ -84,7 +86,7 @@ def natural_language_to_query(natural_language, display_output=True, purpose="qu
         """
     else:
         context = f"""I have a spaced memory review program/app where users submit material or have an AI generate material for them to learn and review over time. 
-        My program writes the material to a duckdb database and I have a query tool using real sql queries to understand my data better.
+        My program writes the material to a duckdb database and I have a query tool using real sql queries to help better understand the data.
         I want you to help me generate SQL queries for users who are non-technical and do not know SQL. They will submit a question about the data in natural
         language and you will generate the SQL query for them to use in my app. 
 
