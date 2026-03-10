@@ -5,6 +5,7 @@ import time
 import pandas as pd
 import os
 import math
+import textwrap
 
 class AISummaryTool:
     def __init__(self):
@@ -64,7 +65,7 @@ class AISummaryTool:
             return None
         
         # Initialize the AI client to gpt 5.1 and  with high reasoning and verbosity for better summaries
-        ai = Reasoning_OpenAIClient(model_name="gpt-5.1", reasoning="high", verbosity="high", system_role_content="You are an expert at summarizing educational material.")
+        ai = Reasoning_OpenAIClient(model_name="gpt-5.2", reasoning="high", verbosity="high", system_role_content="You are an expert at summarizing educational material.")
         prompt = f"""Please provide a concise summary of the following material:\n\n{material_content}\n\n:
                      Summarize the key points and main ideas in a clear and organized manner.
                      Each subject and topic should be clearly labeled in the summary. They should also be bolded.
@@ -112,47 +113,50 @@ class AISummaryTool:
         display(Markdown(f"**Generating {difficulty} level quiz with {quiz_length} questions...**"))
         
         if not interactive:
-            ai = Reasoning_OpenAIClient(model_name="gpt-5.1", reasoning="high", verbosity="high", system_role_content="You are an expert at creating quizzes based on educational material.")
-            prompt = f"""Based on the following content, create a quiz of {difficulty} level difficulty.
-                        Here is the content:\n\n{content}\n\n
-                        
-                        QUIZ LENGTH:
-                        The quiz should contain exactly {quiz_length} questions.
-                        
-                        Each question should have 4 multiple-choice answers, with one correct answer.
-                        Please format the quiz exactly as follows:
-                        
-                        **Question 1: [Question text]**
-                        
-                        A. [Option A]
-                        B. [Option B]
-                        C. [Option C]
-                        D. [Option D]
-                        
-                        
-                        **Question 2: [Question text]**
-                        
-                        A. [Option A]
-                        B. [Option B]
-                        C. [Option C]
-                        D. [Option D]
-                        
-                        
-                        
-                        **Question 3: [Question text]**
-                        
-                        A. [Option A]
-                        B. [Option B]
-                        C. [Option C]
-                        D. [Option D]
-                        
-                        ...
-                        
-                        **Correct Answers:** [List answers like: 1-A, 2-B, etc.]
-                        
-                        IMPORTANT: THE QUESTIONS AND ANSWERS SHOULD BE BASED ON THE EXACT CONTENT PROVIDED.
-                        Do not provide any additional information beyond the quiz. No follow-up questions, comments, or introductory remarks. Just the quiz in the exact format shown above.
-                    """
+            ai = Reasoning_OpenAIClient(model_name="gpt-5.4", reasoning="high", verbosity="high", system_role_content="You are an expert at creating quizzes based on educational material.")
+            prompt = textwrap.dedent(f"""
+                Based on the following content, create a quiz of {difficulty} level difficulty.
+                Here is the content:
+
+                {content}
+
+                QUIZ LENGTH:
+                The quiz should contain exactly {quiz_length} questions.
+
+                Each question should have 4 multiple-choice answers, with one correct answer.
+                Each answer choice MUST be on its own separate line, as in a standard quiz format.
+                Please format the quiz exactly as follows:
+
+                **Question 1: [Question text]**
+
+                **A.** [Option A]
+                **B.** [Option B]
+                **C.** [Option C]
+                **D.** [Option D]
+
+
+                **Question 2: [Question text]**
+
+                **A.** [Option A]
+                **B.** [Option B]
+                **C.** [Option C]
+                **D.** [Option D]
+
+
+                **Question 3: [Question text]**
+
+                **A.** [Option A]
+                **B.** [Option B]
+                **C.** [Option C]
+                **D.** [Option D]
+
+                ...
+
+                **Correct Answers:** [List answers like: 1-A, 2-B, etc.]
+
+                IMPORTANT: THE QUESTIONS AND ANSWERS SHOULD BE BASED ON THE EXACT CONTENT PROVIDED.
+                Do not provide any additional information beyond the quiz. No follow-up questions, comments, or introductory remarks. Just the quiz in the exact format shown above.
+            """).strip()
 
             time.sleep(1.8)
             clear_output(wait=True)
@@ -165,7 +169,7 @@ class AISummaryTool:
             display(Markdown(quiz))
             return quiz
         else:
-            ai = Reasoning_OpenAIClient(model_name="gpt-5.1", reasoning="high", verbosity="high", system_role_content="You are an expert at creating quizzes based on educational material.")
+            ai = Reasoning_OpenAIClient(model_name="gpt-5.4", reasoning="high", verbosity="high", system_role_content="You are an expert at creating quizzes based on educational material.")
             
             if difficulty == "advanced":
                 quiz_length = self.num_files * 2  # e.g., 2 questions per file
@@ -174,50 +178,54 @@ class AISummaryTool:
             elif difficulty == "beginner":
                quiz_length = self.num_files * 1  
             
-            prompt = f"""Based on the following content, create a quiz of {difficulty} difficulty level.
-                        Here is the content:\n\n{content}\n\n
-                        
-                        QUIZ LENGTH:
-                        The quiz should contain exactly {quiz_length} questions.
-                        
-                        Return the response as a single string that I can split using triple pipes (|||) as a separator.
+            prompt = textwrap.dedent(f"""
+                Based on the following content, create a quiz of {difficulty} difficulty level.
+                Here is the content:
 
-                        CRITICAL FORMATTING REQUIREMENTS:
-                        - Use TRIPLE PIPES (|||) after EVERY element EXCEPT the very last one
-                        - First {quiz_length} elements: formatted questions with options
-                        - Last {quiz_length} elements: correct answers (just the letter: A, B, C, or D)
+                {content}
 
-                        The exact format should be:
-                        **Question 1: [Question text]**
+                QUIZ LENGTH:
+                The quiz should contain exactly {quiz_length} questions.
 
-                        A. [Option A]
-                        B. [Option B]
-                        C. [Option C]
-                        D. [Option D]|||
+                Return the response as a single string that I can split using triple pipes (|||) as a separator.
+                Each answer choice MUST be on its own separate line, as in a standard quiz format.
 
+                CRITICAL FORMATTING REQUIREMENTS:
+                - Use TRIPLE PIPES (|||) after EVERY element EXCEPT the very last one
+                - First {quiz_length} elements: formatted questions with options
+                - Last {quiz_length} elements: correct answers (just the letter: A, B, C, or D)
 
-                        **Question 2: [Question text]**
+                The exact format should be:
+                **Question 1: [Question text]**
 
-                        A. [Option A]
-                        B. [Option B]
-                        C. [Option C]
-                        D. [Option D]|||
+                **A.** [Option A]
+                **B.** [Option B]
+                **C.** [Option C]
+                **D.** [Option D]|||
 
 
-                        **Question 3: [Question text]**
+                **Question 2: [Question text]**
 
-                        A. [Option A]
-                        B. [Option B]
-                        C. [Option C]
-                        D. [Option D]|||A|||B|||C
+                **A.** [Option A]
+                **B.** [Option B]
+                **C.** [Option C]
+                **D.** [Option D]|||
 
-                        etc..
 
-                        Return ONLY the formatted string above with triple pipes as separators. NO extra text, explanations, or formatting.
-                        
-                        IMPORTANT: THE QUESTIONS AND ANSWERS SHOULD BE BASED ON THE EXACT CONTENT PROVIDED.
-                        Return only the single list above, nothing else.
-                    """
+                **Question 3: [Question text]**
+
+                **A.** [Option A]
+                **B.** [Option B]
+                **C.** [Option C]
+                **D.** [Option D]|||A|||B|||C
+
+                etc..
+
+                Return ONLY the formatted string above with triple pipes as separators. NO extra text, explanations, or formatting.
+
+                IMPORTANT: THE QUESTIONS AND ANSWERS SHOULD BE BASED ON THE EXACT CONTENT PROVIDED.
+                Return only the single list above, nothing else.
+            """).strip()
 
             time.sleep(1.8)
             clear_output(wait=True)
