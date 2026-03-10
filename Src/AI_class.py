@@ -94,7 +94,7 @@ class Reasoning_OpenAIClient:
     """
  
     def __init__(self, api_key=API_KEY, 
-                 model_name="gpt-5.1", 
+                 model_name="gpt-5.4", 
                  reasoning = "medium",
                  verbosity = "medium",
                  system_role_content="You are a helpful assistant." 
@@ -152,10 +152,10 @@ class Reasoning_OpenAIClient:
             return f"An error occurred: {str(e)}"
         
 # IMPORTANT:
-# Docs for the new Gpt-5.1 model can be found here with all the available parameters:
+# Docs for the new Gpt-5.4 model can be found here with all the available parameters:
 # https://platform.openai.com/docs/guides/latest-model
             
             
 if __name__ == '__main__':
-    b = Reasoning_OpenAIClient(model_name='gpt-5.1', reasoning='high', verbosity='high')
+    b = Reasoning_OpenAIClient(model_name='gpt-5.4', reasoning='high', verbosity='high')
     print(b.get_response("Do intuitive feelings in humans attest to their truthfulness? Provide a detailed analysis."))
